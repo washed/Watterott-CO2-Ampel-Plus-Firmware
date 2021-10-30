@@ -15,9 +15,11 @@ FORMAT_COMMAND=clang-format --style=Chromium -i **/*.cpp **/*.h
 FORMAT_TEST_COMMAND=clang-format --style=Chromium --Werror --dry-run **/*.cpp **/*.h
 
 ifeq (${CI}, true)
-	USER_FLAG=-u root
+	BUILDER_USER=root
+	WORKDIR=/root
 else
-	USER_FLAG=
+	BUILDER_USER=runner
+	WORKDIR=/home/runner
 endif
 
 ifneq ($(V), 0)
@@ -26,7 +28,7 @@ else
 	VERBOSE_FLAG=
 endif
 
-BUILDER_BASE_COMMAND=docker-compose run $(USER_FLAG) arduino-builder
+BUILDER_BASE_COMMAND=BUILDER_USER=$(BUILDER_USER) WORKDIR=$(WORKDIR) docker-compose run arduino-builder
 
 .PHONY: all example program clean
 

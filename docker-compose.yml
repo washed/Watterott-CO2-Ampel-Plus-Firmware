@@ -3,7 +3,9 @@ services:
     image: arduino-builder
     build:
       context: arduino-builder
+    working_dir: ${WORKDIR}
+    user: ${BUILDER_USER}
     volumes:
       - type: bind
         source: ./CO2-Ampel_Plus
-        target: /home/runner/CO2-Ampel_Plus
+        target: ${WORKDIR-/home/runner}/CO2-Ampel_Plus
