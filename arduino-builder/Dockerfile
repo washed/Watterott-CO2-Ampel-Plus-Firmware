@@ -2,7 +2,7 @@ FROM ubuntu
 
 RUN apt-get clean && apt-get update && apt-get upgrade -y
 RUN apt-get install curl clang-format sudo -y
-RUN curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/bin sh
+RUN curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/0.19.3/install.sh | BINDIR=/usr/bin sh
 
 RUN useradd --create-home --shell /bin/bash runner
 

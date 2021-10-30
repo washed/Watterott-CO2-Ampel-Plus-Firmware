@@ -3,12 +3,16 @@ on: [push]
 jobs:
   style-check:
     runs-on: ubuntu-latest
+    env:
+      BUILD_AS_ROOT: 1
     steps:
       - uses: actions/checkout@v2
       - run: make builder
       - run: make format-test
   build:
     runs-on: ubuntu-latest
+    env:
+      BUILD_AS_ROOT: 1
     steps:
       - uses: actions/checkout@v2
       - name: Setup tmate session

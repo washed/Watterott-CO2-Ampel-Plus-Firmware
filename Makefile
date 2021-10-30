@@ -14,12 +14,19 @@ CLEAN_COMMAND=rm -rf $(BUILD_PATH) && rm -rf $(BUILD_CACHE_PATH)
 FORMAT_COMMAND=clang-format --style=Chromium -i **/*.cpp **/*.h
 FORMAT_TEST_COMMAND=clang-format --style=Chromium --Werror --dry-run **/*.cpp **/*.h
 
+ifeq (${CI}, true)
+	USER_FLAG=-u root
+else
+	USER_FLAG=
+endif
 
 ifneq ($(V), 0)
 	VERBOSE_FLAG=-v
 else
 	VERBOSE_FLAG=
 endif
+
+BUILDER_BASE_COMMAND=docker-compose run $(USER_FLAG) arduino-builder
 
 .PHONY: all example program clean
 
@@ -29,16 +36,16 @@ builder:
 	docker-compose build
 
 clean:
-	docker-compose run arduino-builder $(CLEAN_COMMAND)
+	$(BUILDER_BASE_COMMAND) $(CLEAN_COMMAND)
 
 build: builder clean
-	docker-compose run arduino-builder $(BUILD_COMMAND)
+	$(BUILDER_BASE_COMMAND) $(BUILD_COMMAND)
 
 format:
-	docker-compose run arduino-builder $(FORMAT_COMMAND)
+	$(BUILDER_BASE_COMMAND) $(FORMAT_COMMAND)
 
 format-test:
-	docker-compose run arduino-builder $(FORMAT_TEST_COMMAND)
+	$(BUILDER_BASE_COMMAND) $(FORMAT_TEST_COMMAND)
 
 # program:
 # 	$(ARDUINO_CLI) upload $(VERBOSE_FLAG) -p $(SERIAL_PORT) --fqbn $(BOARD_TYPE) $(PROJECT)

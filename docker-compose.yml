@@ -7,5 +7,3 @@ services:
       - type: bind
         source: ./CO2-Ampel_Plus
         target: /home/runner/CO2-Ampel_Plus
-    environment:
-      USER: ${USER}
