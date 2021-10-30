@@ -4,10 +4,10 @@ RUN apt-get clean && apt-get update && apt-get upgrade -y
 RUN apt-get install curl clang-format sudo -y
 RUN curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/bin sh
 
-RUN useradd --create-home --shell /bin/bash builder
+RUN useradd --create-home --shell /bin/bash runner
 
-USER builder
-WORKDIR /home/builder
+USER runner
+WORKDIR /home/runner
 
 RUN arduino-cli config init
 RUN arduino-cli config add board_manager.additional_urls https://raw.githubusercontent.com/washed/CO2-Ampel/master/package_co2ampel_index.json
