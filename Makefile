@@ -10,7 +10,10 @@ BUILD_CACHE_DIR=_build_cache
 BUILD_PATH=$(PROJECT)/$(BUILD_DIR)
 BUILD_CACHE_PATH=$(PROJECT)/$(BUILD_CACHE_DIR)
 BUILD_COMMAND=$(ARDUINO_CLI) compile $(VERBOSE_FLAG) --warnings more --build-path=$(BUILD_PATH) --build-cache-path=$(BUILD_CACHE_PATH) -b $(BOARD_TYPE) $(PROJECT)
-CLEAN_COMMAND=rm -rf $(BUILD_PATH)
+CLEAN_COMMAND=rm -rf $(BUILD_PATH) && rm -rf $(BUILD_CACHE_PATH)
+FORMAT_COMMAND=clang-format --style=Chromium -i **/*.cpp **/*.h
+FORMAT_TEST_COMMAND=clang-format --style=Chromium --Werror --dry-run **/*.cpp **/*.h
+
 
 ifneq ($(V), 0)
 	VERBOSE_FLAG=-v
@@ -30,6 +33,12 @@ clean:
 
 build: builder clean
 	docker-compose run arduino-builder $(BUILD_COMMAND)
+
+format:
+	docker-compose run arduino-builder $(FORMAT_COMMAND)
+
+format-test:
+	docker-compose run arduino-builder $(FORMAT_TEST_COMMAND)
 
 # program:
 # 	$(ARDUINO_CLI) upload $(VERBOSE_FLAG) -p $(SERIAL_PORT) --fqbn $(BOARD_TYPE) $(PROJECT)

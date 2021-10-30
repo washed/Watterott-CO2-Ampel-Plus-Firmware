@@ -1,6 +1,12 @@
 name: Arduino build
 on: [push]
 jobs:
+  style-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: make builder
+      - run: make format-test
   build:
     runs-on: ubuntu-latest
     steps:

@@ -6,4 +6,6 @@ services:
     volumes:
       - type: bind
         source: ./CO2-Ampel_Plus
-        target: /root/CO2-Ampel_Plus
+        target: /home/builder/CO2-Ampel_Plus
+    environment:
+      USER: ${USER}
