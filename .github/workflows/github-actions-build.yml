@@ -3,6 +3,7 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: docker
     steps:
       - uses: actions/checkout@v2
       - name: Login to Docker Hub
