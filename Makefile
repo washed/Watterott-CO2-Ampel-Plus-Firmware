@@ -2,7 +2,7 @@ FORMAT_FILES=$(shell find CO2-Ampel_Plus -iname '*.h' -print0 -or -iname '*.cpp'
 FORMAT_COMMAND="--style=Chromium -verbose -i $(FORMAT_FILES)"
 FORMAT_TEST_COMMAND="--style=Chromium -verbose --Werror --dry-run $(FORMAT_FILES)"
 
-.PHONY: clean build-builder build
+.PHONY: clean local-env build-builder build-builder-formatter build format format-test
 
 clean:
 	@rm -rf build
