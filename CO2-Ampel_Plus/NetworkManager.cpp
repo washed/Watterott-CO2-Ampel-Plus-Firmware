@@ -87,6 +87,8 @@ int wifi_wpa_connect() {
     };
   }
 
+  cfg = config_get_values();
+
   wifi_status = WiFi.begin(cfg.wifi_ssid, cfg.wifi_password);
   int timeout = 5000;
 
