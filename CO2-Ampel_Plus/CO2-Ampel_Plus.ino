@@ -30,6 +30,7 @@
 #include "MQTTManager.h"
 #include "NetworkManager.h"
 #include "Sensor.h"
+#include "SerialCommand.h"
 
 byte wifi_state = WIFI_MODE_WPA_CONNECT;
 const byte BUTTON_PIN(PIN_SWITCH);
@@ -46,6 +47,7 @@ void setup() {
   }
 #endif
   Serial.begin(115200);
+
   Serial.println("------------------------");
   Serial.println("Starting setup...");
   Serial.println("Watterott CO2 Ampel PLUS");
@@ -92,6 +94,9 @@ void loop() {
   /**
    * Start WiFi Access Point when Button is pressed for more than 3 seconds
    */
+
+  serial_handler();
+
   modeButton.read();
   if (modeButton.pressedFor(3000)) {
     wifi_state = WIFI_MODE_AP_INIT;
@@ -106,7 +111,6 @@ void loop() {
       break;
 
     case WIFI_MODE_WPA_CONNECT:  // Connect to WiFi
-
       device_config_t cfg = config_get_values();
       Serial.print("Connecting to SSID ");
       Serial.print(cfg.wifi_ssid);
