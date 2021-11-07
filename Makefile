@@ -34,17 +34,31 @@ format-test: build-builder-formatter
 upload:
 	arduino-cli upload CO2-Ampel_Plus -b co2ampel:samd:sb --input-dir build -p $(CO2AMPEL_DEV)
 
-build-upload: build upload
-
 configure:
-	echo -ne 'set buzzer 0;' > $(CO2AMPEL_DEV)
-	echo -ne 'set wifi_password ${WIFI_PASSWORD};' > $(CO2AMPEL_DEV)
-	echo -ne 'set wifi_ssid ${WIFI_SSID};' > $(CO2AMPEL_DEV)
+	@echo "Configuring..."
+	@echo -ne 'set buzzer 0;' > $(CO2AMPEL_DEV)
+	@echo -ne 'set wifi_password ${WIFI_PASSWORD};' > $(CO2AMPEL_DEV)
+	@echo -ne 'set wifi_ssid ${WIFI_SSID};' > $(CO2AMPEL_DEV)
+	@echo "Configuring done!"
 
 get-configure:
-	echo -ne 'get buzzer;' > $(CO2AMPEL_DEV)
-	echo -ne 'get wifi_ssid;' > $(CO2AMPEL_DEV)
-	echo -ne 'get wifi_password;' > $(CO2AMPEL_DEV)
+	@echo -ne 'get buzzer;' > $(CO2AMPEL_DEV)
+	@echo -ne 'get wifi_ssid;' > $(CO2AMPEL_DEV)
+	@echo -ne 'get wifi_password;' > $(CO2AMPEL_DEV)
 
 reboot:
-	echo -ne 'reboot;' > $(CO2AMPEL_DEV)
+	@echo -ne 'reboot;' > $(CO2AMPEL_DEV)
+
+wait-for-serial-to-go-away:
+	@echo "Wating for serial port to go away"
+	@until ! echo -ne ';' > $(CO2AMPEL_DEV); do sleep 0.1s; done;
+	@echo "Serial gone!"
+
+wait-for-serial-to-come-back:
+	@echo "Wating for serial port to come back..."
+	@until echo -ne ';' > $(CO2AMPEL_DEV); do sleep 0.1s; done;
+	@echo "Serial ready!"
+
+build-upload-configure: build upload wait-for-serial-to-go-away wait-for-serial-to-come-back configure
+
+boc: build-upload-configure
