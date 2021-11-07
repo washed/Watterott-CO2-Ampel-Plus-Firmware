@@ -1,6 +1,7 @@
 #include "SerialCommand.h"
 #include <Arduino.h>
 #include "DeviceConfig.h"
+#include "core_cm0plus.h"
 #include "errno.h"
 
 constexpr size_t _SERIAL_BUFFER_SIZE = 128;
@@ -13,6 +14,8 @@ constexpr char SET_COMMAND[] = "set";
 constexpr size_t SET_COMMAND_LENGTH = sizeof(SET_COMMAND);
 constexpr char GET_COMMAND[] = "get";
 constexpr size_t GET_COMMAND_LENGTH = sizeof(GET_COMMAND);
+constexpr char REBOOT_COMMAND[] = "reboot";
+constexpr size_t REBOOT_COMMAND_LENGTH = sizeof(REBOOT_COMMAND);
 
 // Variables
 constexpr char VAR_BUZZER[] = "buzzer";
@@ -24,26 +27,8 @@ constexpr size_t VAR_WIFI_SSID_LENGTH = sizeof(VAR_WIFI_SSID);
 constexpr char VAR_WIFI_PASSWORD[] = "wifi_password";
 constexpr size_t VAR_WIFI_PASSWORD_LENGTH = sizeof(VAR_WIFI_PASSWORD);
 
-enum COMMAND_STATES { NONE_CMD, SET, GET };
-enum VAR_STATES {
-  NONE_VAR,
-  CHANGE_COUNT,
-  BUZZER,
-  WIFI_SSID,
-  WIFI_PASSWORD
-  /*
-AP_PSK,
-  int mqtt_broker_port;
-  char mqtt_broker_address[20];
-  char mqtt_topic[20];
-  char ampel_name[40];
-  float temperature_offset;
-  char mqtt_username[20];
-  char mqtt_password[20];
-  int mqtt_format;
-  bool light_enabled;
-  */
-};
+enum COMMAND_STATES { NONE_CMD, SET, GET, REBOOT };
+enum VAR_STATES { NONE_VAR, CHANGE_COUNT, BUZZER, WIFI_SSID, WIFI_PASSWORD };
 enum VAL_STATES { NONE_VAL, VAL, ERR_VAL };
 
 constexpr size_t COMMAND_VAL_MAX_STR_LEN = 70;
@@ -213,12 +198,21 @@ static void command_state_machine(
           break;
       }
       break;
+
+    case COMMAND_STATES::REBOOT:
+      Serial.println("Rebooting in 1 second!");
+      delay(1000);
+      NVIC_SystemReset();
+      break;
+
     default:
     case COMMAND_STATES::NONE_CMD:
       if (strncmp(token, SET_COMMAND, SET_COMMAND_LENGTH) == 0)
-        serial_command_state.command_state = SET;
-      else if (strncmp(token, GET_COMMAND, GET_COMMAND_LENGTH) == 0)
-        serial_command_state.command_state = GET;
+        serial_command_state.command_state = COMMAND_STATES::SET;
+      if (strncmp(token, GET_COMMAND, GET_COMMAND_LENGTH) == 0)
+        serial_command_state.command_state = COMMAND_STATES::GET;
+      if (strncmp(token, REBOOT_COMMAND, REBOOT_COMMAND_LENGTH) == 0)
+        serial_command_state.command_state = COMMAND_STATES::REBOOT;
       break;
   }
 }

@@ -3,7 +3,7 @@ FORMAT_COMMAND="--style=Chromium -verbose -i $(FORMAT_FILES)"
 FORMAT_TEST_COMMAND="--style=Chromium -verbose --Werror --dry-run $(FORMAT_FILES)"
 CO2AMPEL_DEV=/dev/ttyACM0
 
-.PHONY: clean local-env build-builder build-builder-formatter build format format-test upload build-upload configure get-configure
+.PHONY: clean local-env build-builder build-builder-formatter build format format-test upload build-upload configure get-configure reboot
 
 clean:
 	@docker container rm co2ampel-builder
@@ -45,3 +45,6 @@ get-configure:
 	echo -ne 'get buzzer;' > $(CO2AMPEL_DEV)
 	echo -ne 'get wifi_ssid;' > $(CO2AMPEL_DEV)
 	echo -ne 'get wifi_password;' > $(CO2AMPEL_DEV)
+
+reboot:
+	echo -ne 'reboot;' > $(CO2AMPEL_DEV)
