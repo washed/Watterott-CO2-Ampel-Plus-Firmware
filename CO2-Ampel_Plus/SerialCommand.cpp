@@ -7,8 +7,6 @@
 constexpr size_t _SERIAL_BUFFER_SIZE = 128;
 char serial_buffer[_SERIAL_BUFFER_SIZE + 1] = {};
 
-constexpr size_t MAX_CMD_LENGTH = 8;
-
 // Commands
 constexpr char SET_COMMAND[] = "set";
 constexpr size_t SET_COMMAND_LENGTH = sizeof(SET_COMMAND);
