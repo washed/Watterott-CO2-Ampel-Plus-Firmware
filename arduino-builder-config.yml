@@ -5,6 +5,7 @@ boards:
   - co2ampel:samd
 libraries:
   - ArduinoJson
+  - CircularBuffer
 compile:
   verbose: true
   warnings: more
