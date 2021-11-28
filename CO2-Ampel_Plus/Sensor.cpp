@@ -5,7 +5,8 @@
 #include "Buzzer.h"
 #include "Config.h"
 #include "DeviceConfig.h"
-#include "LED.h"
+// #include "LED.h"
+#include "LEDPatterns.h"
 #include "NetworkManager.h"
 #if DISPLAY_OUTPUT > 0
 #include <Adafruit_GFX.h>
@@ -65,8 +66,8 @@ void sensor_calibration() {
   co2_last = co2;
   for (okay = 0; okay < 60;) {  // mindestens 60 Messungen (ca. 2 Minuten)
 
-    led_one_by_one(LED_YELLOW, 100);
-    led_update();
+    // led_one_by_one(LED_YELLOW, 100);
+    // led_update();
 
     if (co2_sensor.dataAvailable())  // alle 2s
     {
@@ -84,13 +85,13 @@ void sensor_calibration() {
 
       co2_last = co2;
 
-      if (co2 < 500) {
-        led_set_color(LED_GREEN);
-      } else if (co2 < 600) {
-        led_set_color(LED_YELLOW);
-      } else {  // >=600
-        led_set_color(LED_RED);
-      }
+      // if (co2 < 500) {
+      //   led_set_color(LED_GREEN);
+      // } else if (co2 < 600) {
+      //   led_set_color(LED_YELLOW);
+      // } else {  // >=600
+      //   led_set_color(LED_RED);
+      // }
       led_update();
 
 #if SERIAL_OUTPUT > 0
@@ -98,15 +99,14 @@ void sensor_calibration() {
       Serial.println(okay);
 #endif
 
-      show_data();
+      // TODO: show_data();
     }
 
     if (okay >= 60) {
       co2_sensor.setForcedRecalibrationFactor(400);  // 400ppm = Frischluft
       led_off();
-      led_tick = 0;
       delay(50);
-      led_set_color(LED_GREEN);
+      led_on_color(LED_GREEN);
       delay(100);
       led_off();
       led_update();
@@ -118,8 +118,10 @@ void sensor_calibration() {
 unsigned int light_sensor(void)  // Auslesen des Lichtsensors
 {
   unsigned int i;
+  /*
   uint32_t color = led_get_color();  // aktuelle Farbe speichern
   led_off();
+  */
 
   digitalWrite(PIN_LSENSOR_PWR, HIGH);  // Lichtsensor an
   delay(40);                            // 40ms warten
@@ -129,8 +131,7 @@ unsigned int light_sensor(void)  // Auslesen des Lichtsensors
   i /= 2;
   digitalWrite(PIN_LSENSOR_PWR, LOW);  // Lichtsensor aus
 
-  led_set_color(color);
-  led_update();
+  // led_on_color(color);
   return i;
 }
 
@@ -163,7 +164,8 @@ void sensor_init() {
     delay(500);
 #if SERIAL_OUTPUT > 0
     Serial.println("Error: CO2 sensor not found.");
-    led_failure(LED_RED);
+    led_queue_flush();
+    led_sensor_failure();
 #endif
   }
   // co2_sensor.setForcedRecalibrationFactor(1135);
@@ -199,25 +201,23 @@ void sensor_handler() {
       mqtt_send_value(co2, temp, humi, light);
     }
 
-    show_data();
+    // TODO: show_data();
   }
 
   // Ampel
   if (ampel < START_GREEN) {
-    led_set_color(LED_BLUE);
+    led_default_on(LED_BLUE);
   } else if (ampel < START_YELLOW) {
-    led_set_color(LED_GREEN);
+    led_default_on(LED_GREEN);
   } else if (ampel < START_RED) {
-    led_set_color(LED_YELLOW);
+    led_default_on(LED_YELLOW);
   } else if (ampel < START_RED_BLINK) {
-    led_set_color(LED_RED);
+    led_default_on(LED_RED);
   } else if (ampel < START_VIOLET) {
-    led_blink(LED_RED, 1000);
+    led_default_blink(LED_RED);
   } else {
-    led_set_color(LED_VIOLET);
+    led_default_blink(LED_VIOLET);
   }
-
-  led_update();  // zeige Farbe
 }
 
 float get_temperature() {
@@ -237,9 +237,10 @@ unsigned int get_brightness() {
 }
 
 void sensor_handle_brightness() {
-  if ((millis() - t_light) > (LIGHT_INTERVAL * 1000)) {
+  if ((millis() - t_light) > (1 * 1000)) {
     t_light = millis();
     light = light_sensor();
+    /*
     if (light < LIGHT_DARK && dunkel == 0) {
       dunkel = 1;
       co2_sensor.setMeasurementInterval(INTERVAL_DARK);
@@ -249,5 +250,6 @@ void sensor_handle_brightness() {
       co2_sensor.setMeasurementInterval(INTERVAL);
       led_adjust_brightness(255);  // 0...255
     }
+    */
   }
 }

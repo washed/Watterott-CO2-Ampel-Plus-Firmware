@@ -19,7 +19,7 @@ bool mqtt_connect() {
   if (strcmp(cfg.mqtt_broker_address, "127.0.0.1")) {
     sprintf(willTopic, "%s/%s/%s", cfg.mqtt_topic, cfg.ampel_name,
             MQTT_LWT_SUBTOPIC);
-    led_set_color(LED_WHITE);
+    // led_set_color(LED_WHITE);
     Serial.print("Connecting to ");
     Serial.print(cfg.mqtt_broker_address);
     Serial.print(":");
@@ -156,7 +156,7 @@ void mqtt_message_received(char* topic, byte* payload, unsigned int length) {
       cfg.light_enabled = false;
     }
     config_set_values(cfg);
-    led_set_brightness();
+    // led_set_brightness();
   }
   if (doc.containsKey("buzzer_enabled")) {
     String buzzer_enabled = doc["buzzer_enabled"];

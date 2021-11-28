@@ -24,6 +24,7 @@
 #include <JC_Button.h>
 #include <TaskScheduler.h>
 #include <WiFi101.h>
+#include <vector>
 #include "Buzzer.h"
 #include "Config.h"
 #include "DeviceConfig.h"
@@ -78,45 +79,36 @@ void setup() {
   Serial.println("in production environment!");
 #endif
 
+  task_led.enable();
   led_init();
-  led_test();
-  led_set_color(LED_WHITE);
-  led_update();
 
   modeButton.begin();
   modeButton.read();
-
-  buzzer_init();
-  buzzer_test();
-
-  sensor_init();
   /**
    * Factory Reset when button is pressed while reset
    */
   if (!config_is_initialized() || modeButton.isPressed()) {
     Serial.println("Loading factory defaults");
-    led_off();
-    led_set_color(LED_RED);
-    led_update();
-    delay(50);
+    led_state_queue.push(
+        led_state_t{set_leds_blink, 10, 20, std::vector<uint32_t>{LED_RED}});
     config_set_factory_defaults();
-    led_off();
+    run_until_queue_size(0);
   }
+
+  led_state_queue.push(led_state_t{
+      set_leds_circle_cw, 50, 32,
+      std::vector<uint32_t>{LED_RED, LED_YELLOW, LED_GREEN, LED_BLUE}});
+  led_state_queue.push(
+      led_state_t{set_leds_on, 50, -1, std::vector<uint32_t>{LED_WHITE}});
+  run_until_queue_size(1);
+  led_queue_flush();
+
+  buzzer_init();
+  buzzer_test();
+
+  sensor_init();
   Serial.println("Setup complete!");
   Serial.println("------------------------");
-}
-
-void loop() {
-  /**
-   * Start WiFi Access Point when Button is pressed for more than 3 seconds
-   */
-
-  serial_handler();
-
-  modeButton.read();
-  if (modeButton.pressedFor(3000)) {
-    wifi_state = WIFI_MODE_AP_INIT;
-  }
 
   switch (wifi_state) {
     case WIFI_MODE_AP_INIT:  // Create  an Access  Point
@@ -127,29 +119,10 @@ void loop() {
       break;
 
     case WIFI_MODE_WPA_CONNECT:  // Connect to WiFi
-      device_config_t cfg = config_get_values();
-      Serial.print("Connecting to SSID ");
-      Serial.print(cfg.wifi_ssid);
-      Serial.println(" Wifi");
-      if (strlen(cfg.wifi_ssid) != 0) {
-        if (wifi_wpa_connect() == WL_CONNECTED) {
-          wifi_state = WIFI_MODE_WPA_LISTEN;
-        } else {
-          wifi_state = WIFI_MODE_WPA_CONNECT;
-        }
-      } else {
-        Serial.println("No WiFi SSID Configured.");
-        wifi_state = WIFI_MODE_NOT_CONECTED;
-      }
-      Serial.println("------------------------");
-      Serial.println("Start measurement");
-      Serial.println("");
+      task_wifi_connect.enable();
       break;
   }
 
-  if (!wifi_is_connected()) {
-    wifi_state = WIFI_MODE_WPA_CONNECT;
-  }
   task_serial_handler.enable();
 }
 
@@ -165,7 +138,7 @@ void loop() {
   }
   */
 
-  wifi_handle_client();
+  // mqtt_loop();
   sensor_handler();
   sensor_handle_brightness();
 

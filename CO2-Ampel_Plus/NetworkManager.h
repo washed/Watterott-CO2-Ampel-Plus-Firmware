@@ -8,6 +8,7 @@
 #include "LED.h"
 #include "MQTTManager.h"
 #include "Sensor.h"
+#include "scheduler.h"
 
 bool wifi_is_connected();
 
@@ -17,7 +18,7 @@ bool ap_is_active();
 
 void wifi_handle_ap_html();
 
-int wifi_wpa_connect();
+void wifi_wpa_connect();
 
 void wpa_listen_handler();
 
@@ -27,5 +28,7 @@ void print_wifi_status();
 
 void print_mac_address(byte mac[]);
 void wifi_handle_client();
+
+extern Task task_wifi_connect;
 
 #endif

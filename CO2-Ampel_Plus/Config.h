@@ -24,10 +24,10 @@
 
 // Ermuedung
 #define START_GREEN 550
-#define START_YELLOW 1000       // >= 1000ppm
-#define START_RED 1400          // >= 1200ppm
-#define START_RED_BLINK 1600    // >= 1400ppm
-#define START_BUZZER 1600       // >= 1600ppm
+#define START_YELLOW 1000     // >= 1000ppm
+#define START_RED 1400        // >= 1200ppm
+#define START_RED_BLINK 1600  // >= 1400ppm
+#define START_BUZZER 1600     // >= 1600ppm
 #define START_VIOLET 1800
 
 //--- WiFi configuration ---
@@ -76,7 +76,7 @@
 
 #define LED_COLOR_WIFI_MANAGER 0X0000FF
 #define LED_COLOR_WIFI_CONNECTING 0X00FF00
-#define LED_COLOR_WIFI_FAILURE 0X0000FF
+#define LED_COLOR_WIFI_FAILURE 0XFF0000
 
 //--- Light sensor configuration ---
 #define LIGHT_DARK 20        // <20 -> dark

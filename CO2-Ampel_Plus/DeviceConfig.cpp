@@ -32,12 +32,12 @@ void config_set_factory_defaults() {
 }
 
 void config_set_values(device_config_t new_config) {
-  led_set_color(LED_RED);
-  led_update();
+  Serial.println("CONFIG SET!");
+  // led_set_color(LED_RED);
+  // led_update();
   new_config.change_count++;
   config_store.write(new_config);
-  delay(50);
-  led_off();
+  // led_off();
 }
 
 device_config_t config_get_values() {
