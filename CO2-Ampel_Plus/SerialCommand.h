@@ -1,6 +1,8 @@
 #ifndef SERIALCOMMAND_H
 #define SERIALCOMMAND_H
 
-void serial_handler();
+#include "scheduler.h"
+
+extern Task task_serial_handler;
 
 #endif

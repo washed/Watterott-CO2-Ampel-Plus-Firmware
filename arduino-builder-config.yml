@@ -6,6 +6,7 @@ boards:
 libraries:
   - ArduinoJson
   - CircularBuffer
+  - TaskScheduler
 compile:
   verbose: true
   warnings: more

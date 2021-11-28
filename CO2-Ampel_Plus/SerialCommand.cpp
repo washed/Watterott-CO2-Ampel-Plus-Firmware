@@ -492,3 +492,5 @@ void serial_handler() {
     }
   }
 }
+
+Task task_serial_handler(10 * TASK_MILLISECOND, -1, &serial_handler, &ts);

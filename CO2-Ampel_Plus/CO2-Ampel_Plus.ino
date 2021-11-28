@@ -22,6 +22,7 @@
 */
 #include <Arduino.h>
 #include <JC_Button.h>
+#include <TaskScheduler.h>
 #include <WiFi101.h>
 #include "Buzzer.h"
 #include "Config.h"
@@ -31,6 +32,21 @@
 #include "NetworkManager.h"
 #include "Sensor.h"
 #include "SerialCommand.h"
+
+Scheduler ts;
+
+#define HEARTBEAT_PERIOD 1000
+void task_heartbeat_cb();
+Task task_heartbeat(HEARTBEAT_PERIOD* TASK_MILLISECOND,
+                    -1,
+                    &task_heartbeat_cb,
+                    &ts,
+                    true);
+
+void task_heartbeat_cb() {
+  Serial.print("heartbeat ");
+  Serial.println(task_heartbeat.getRunCounter());
+}
 
 byte wifi_state = WIFI_MODE_WPA_CONNECT;
 const byte BUTTON_PIN(PIN_SWITCH);
@@ -134,10 +150,24 @@ void loop() {
   if (!wifi_is_connected()) {
     wifi_state = WIFI_MODE_WPA_CONNECT;
   }
+  task_serial_handler.enable();
+}
 
-  mqtt_loop();
+void loop() {
+  /**
+   * Start WiFi Access Point when Button is pressed for more than 3 seconds
+   */
+  /*
+  TODO: Handle this nicer
+  modeButton.read();
+  if (modeButton.pressedFor(3000)) {
+    wifi_state = WIFI_MODE_AP_INIT;
+  }
+  */
 
   wifi_handle_client();
   sensor_handler();
   sensor_handle_brightness();
+
+  ts.execute();
 }
