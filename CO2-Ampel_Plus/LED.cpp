@@ -11,7 +11,6 @@ Adafruit_NeoPixel ws2812 = Adafruit_NeoPixel(NUMBER_OF_WS2312_PIXELS,
                                              PIN_WS2812,
                                              NEO_GRB + NEO_KHZ800);
 byte led_brightness = BRIGHTNESS;
-byte new_led_brightness = BRIGHTNESS;
 
 std::vector<uint32_t> BLACK_VECT = {0};
 
@@ -57,70 +56,51 @@ std::vector<uint32_t> failure_colors(std::vector<uint32_t>& colors) {
   return failure_colors;
 }
 
-bool set_leds_off(uint32_t period_ms,
-                  std::vector<uint32_t>& colors,
-                  uint32_t run_count) {
+bool set_leds_off(led_state_t& led_state, uint32_t run_time_ms) {
   return fill_all(BLACK_VECT);
 }
 
-void set_led_period(uint32_t period_ms) {
-  if (period_ms < LED_MIN_PERIOD_MS)
-    period_ms = LED_MIN_PERIOD_MS;
-  task_led.setInterval(period_ms * TASK_MILLISECOND);
+bool set_leds_on(led_state_t& led_state, uint32_t run_time_ms) {
+  return fill_all(led_state.colors);
 }
 
-bool set_leds_on(uint32_t period_ms,
-                 std::vector<uint32_t>& colors,
-                 uint32_t run_count) {
-  set_led_period(period_ms);
-  bool update_required = fill_all(colors);
-  return update_required;
-}
-
-bool set_leds_blink(uint32_t period_ms,
-                    std::vector<uint32_t>& colors,
-                    uint32_t run_count) {
+bool set_leds_blink(led_state_t& led_state, uint32_t run_time_ms) {
   bool update_required = false;
-  if (run_count % 2 == 0)
-    update_required = fill_all(colors);
+  if ((run_time_ms / led_state.period_ms) % 2 == 0)
+    update_required = fill_all(led_state.colors);
   else {
     update_required = fill_all(BLACK_VECT);
   }
   return update_required;
 }
 
-bool set_leds_circle_cw(uint32_t period_ms,
-                        std::vector<uint32_t>& colors,
-                        uint32_t run_count) {
-  set_led_period(period_ms);
-  return fill_circle(colors, run_count, false);
+bool set_leds_circle_cw(led_state_t& led_state, uint32_t run_time_ms) {
+  int run_count = run_time_ms / led_state.period_ms;
+  return fill_circle(led_state.colors, run_count, false);
 }
 
-bool set_leds_circle_ccw(uint32_t period_ms,
-                         std::vector<uint32_t>& colors,
-                         uint32_t run_count) {
-  set_led_period(period_ms);
-  return fill_circle(colors, run_count, true);
+bool set_leds_circle_ccw(led_state_t& led_state, uint32_t run_time_ms) {
+  int run_count = run_time_ms / led_state.period_ms;
+  return fill_circle(led_state.colors, run_count, true);
 }
 
-bool set_leds_alternate(uint32_t period_ms,
-                        std::vector<uint32_t>& colors,
-                        uint32_t run_count) {
-  const size_t middle = colors.size() / 2;
+bool set_leds_alternate(led_state_t& led_state, uint32_t run_time_ms) {
+  const size_t middle = led_state.colors.size() / 2;
   std::vector<uint32_t> colors_a;
   std::vector<uint32_t> colors_b;
 
   if (middle == 1) {
-    colors_a = {colors[0]};
-    colors_b = {colors[1]};
+    colors_a = {led_state.colors[0]};
+    colors_b = {led_state.colors[1]};
   } else {
-    colors_a = std::vector<uint32_t>(colors.cbegin(), colors.cbegin() + middle);
-    colors_b = std::vector<uint32_t>(colors.cbegin() + middle, colors.cend());
+    colors_a = std::vector<uint32_t>(led_state.colors.cbegin(),
+                                     led_state.colors.cbegin() + middle);
+    colors_b = std::vector<uint32_t>(led_state.colors.cbegin() + middle,
+                                     led_state.colors.cend());
   }
 
-  set_led_period(period_ms);
-
   bool update_required = false;
+  int run_count = run_time_ms / led_state.period_ms;
   if (run_count % 2 == 0)
     update_required = fill_all(colors_a);
   else {
@@ -133,10 +113,7 @@ void led();
 Task task_led(LED_DEFAULT_PERIOD_MS* TASK_MILLISECOND, -1, led, &ts);
 
 led_state_t led_default_state = {
-    set_leds_off,
-    LED_DEFAULT_PERIOD_MS,
-    0,
-    std::vector<uint32_t>{0},
+    set_leds_off, LED_DEFAULT_PERIOD_MS, 0, std::vector<uint32_t>{0}, 0,
 };
 
 bool led_queue_done() {
@@ -161,8 +138,11 @@ void led() {
   led_state_t led_state = get_led_state();
 
   current_state_run_count++;
+  int32_t current_state_run_time_ms =
+      current_state_run_count * LED_DEFAULT_PERIOD_MS;
 
-  if (led_state.runs != -1 && current_state_run_count >= led_state.runs) {
+  if (led_state.run_time_ms != -1 &&
+      current_state_run_time_ms >= led_state.run_time_ms) {
     // Current state is done
     if (!led_state_queue.empty()) {
       led_state_queue.pop();
@@ -171,8 +151,12 @@ void led() {
     led_state = get_led_state();
   }
 
-  update_required = led_state.handler(led_state.period_ms, led_state.colors,
-                                      current_state_run_count);
+  if ((led_state.run_time_ms == -1) ||
+      (current_state_run_time_ms - led_state._last_run_time_ms >=
+       led_state.period_ms)) {
+    update_required = led_state.handler(led_state, current_state_run_time_ms);
+    led_state._last_run_time_ms = current_state_run_time_ms;
+  }
 
   auto cfg = config_get_values();
   if (cfg.light_enabled == false) {
@@ -180,7 +164,18 @@ void led() {
     update_required = true;
   }
 
-  if (new_led_brightness != led_brightness) {
+  if (led_brightness != cfg.led_brightness) {
+    float step =
+        float(cfg.led_brightness - led_brightness) * LED_BRIGHTNESS_FADE_FACTOR;
+
+    if (step > 0 && step < 1)
+      step = 1;
+    else if (step < 0 && step > -1)
+      step = -1;
+
+    led_brightness += step;
+    Serial.print("LED: ");
+    Serial.println(led_brightness);
     update_required = true;
   }
 
@@ -221,5 +216,3 @@ void led_init() {
 uint32_t led_get_color() {
   return 0;
 }
-void led_blink(uint32_t, uint32_t) {}
-void led_adjust_brightness(uint32_t) {}

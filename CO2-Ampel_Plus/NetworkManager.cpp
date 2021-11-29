@@ -7,8 +7,8 @@
 #include "RequestParser.h"
 #include "Sensor.h"
 
-char mdnsName[] = "wifi101";  // the MDNS name that the board will respond to
-                              // after WiFi settings have been provisioned
+char mdnsName[] = "wifi101"; // the MDNS name that the board will respond to
+                             // after WiFi settings have been provisioned
 // Note that the actual MDNS name will have '.local' after
 // the name above, so "wifi101" will be accessible on
 // the MDNS name "wifi101.local".
@@ -23,11 +23,13 @@ int wifi_status = WL_IDLE_STATUS;
 byte wifi_mac[6];
 bool ap_mode_activated = false;
 
-bool wifi_is_connected() {
+bool wifi_is_connected()
+{
   return WiFi.status() == WL_CONNECTED;
 }
 
-void wifi_ap_create() {
+void wifi_ap_create()
+{
 #if DEBUG_LOG > 0
   Serial.println("Create access point for configuration");
 #endif
@@ -38,14 +40,17 @@ void wifi_ap_create() {
   // led_set_brightness();
   // led_update();
 
-  if (wifi_status == WL_CONNECTED) {
+  if (wifi_status == WL_CONNECTED)
+  {
     WiFi.end();
   }
 
-  if (WiFi.status() == WL_NO_SHIELD) {
+  if (WiFi.status() == WL_NO_SHIELD)
+  {
     Serial.println("WiFi shield not present");
     // don't continue
-    while (true) {
+    while (true)
+    {
       // TODO: Think of a better way to handle final errors
       // led_failure(LED_COLOR_WIFI_FAILURE);
     }
@@ -56,9 +61,11 @@ void wifi_ap_create() {
 
   sprintf(ap_ssid, "%s %02X:%02X", WIFI_AP_SSID, wifi_mac[4], wifi_mac[5]);
   wifi_status = WiFi.beginAP(ap_ssid, cfg.ap_password);
-  if (wifi_status != WL_AP_LISTENING) {
+  if (wifi_status != WL_AP_LISTENING)
+  {
     Serial.println("Creating access point failed");
-    while (true) {
+    while (true)
+    {
       // TODO: Think of a better way to handle final errors
       // led_failure(LED_COLOR_WIFI_FAILURE);
     }
@@ -68,16 +75,25 @@ void wifi_ap_create() {
   // TODO: print_wifi_status();
   server.begin();
 
-  while (true) {
+  while (true)
+  {
     wifi_handle_client();
   }
 }
 
-bool ap_is_active() {
+bool ap_is_active()
+{
   return ap_mode_activated;
 }
 
-enum WIFI_CONNECT_STATES { INIT, CONNECTING, CONNECTED, FAILURE, TIMEOUT };
+enum WIFI_CONNECT_STATES
+{
+  INIT,
+  CONNECTING,
+  CONNECTED,
+  FAILURE,
+  TIMEOUT
+};
 WIFI_CONNECT_STATES wifi_connect_state = WIFI_CONNECT_STATES::INIT;
 
 void wifi_wpa_connect();
@@ -88,71 +104,80 @@ Task task_wifi_handle_client(10 * TASK_MILLISECOND,
                              &wifi_handle_client,
                              &ts);
 
-void wifi_wpa_connect() {
+void wifi_wpa_connect()
+{
   wifi_status = WiFi.status();
   static int started_connecting_run_count;
   int connect_try_count = 0;
-  switch (wifi_connect_state) {
-    default:
-    case WIFI_CONNECT_STATES::INIT:
-      if (wifi_status == WL_AP_CONNECTED) {
-        WiFi.end();
-        ap_mode_activated = false;
-      }
-      // check for the presence of the shield:
-      if (WiFi.status() == WL_NO_SHIELD) {
-        Serial.println("WiFi shield not present");
-        wifi_connect_state = WIFI_CONNECT_STATES::FAILURE;
-        led_wifi_failure();
-      }
+  switch (wifi_connect_state)
+  {
+  default:
+  case WIFI_CONNECT_STATES::INIT:
+    if (wifi_status == WL_AP_CONNECTED)
+    {
+      WiFi.end();
+      ap_mode_activated = false;
+    }
+    // check for the presence of the shield:
+    if (WiFi.status() == WL_NO_SHIELD)
+    {
+      Serial.println("WiFi shield not present");
+      wifi_connect_state = WIFI_CONNECT_STATES::FAILURE;
+      led_wifi_failure();
+    }
 
-      cfg = config_get_values();
-      if (strlen(cfg.wifi_ssid) == 0 || strlen(cfg.wifi_password) == 0) {
-        Serial.println("Wifi SSID and/or password not set!");
-        wifi_connect_state = WIFI_CONNECT_STATES::INIT;
-        task_wifi_connect.restartDelayed(1000);
-        break;
-      }
-
-      WiFi.begin(cfg.wifi_ssid, cfg.wifi_password);
-      started_connecting_run_count = task_wifi_connect.getRunCounter();
-      led_wifi_connecting();
-      wifi_connect_state = WIFI_CONNECT_STATES::CONNECTING;
-      break;
-
-    case WIFI_CONNECT_STATES::CONNECTING:
-      connect_try_count =
-          task_wifi_connect.getRunCounter() - started_connecting_run_count;
-      if (wifi_status == WL_CONNECTED) {
-        led_queue_flush();
-        led_wifi_connected();
-        wifi_connect_state = WIFI_CONNECT_STATES::CONNECTED;
-        // TODO: move server and mqtt stuff to their own tasks to separate
-        server.begin();
-        mqtt_connect();
-        task_wifi_handle_client.enable();
-      } else if (connect_try_count >= 10) {
-        wifi_connect_state = WIFI_CONNECT_STATES::TIMEOUT;
-      }
-      break;
-
-    case WIFI_CONNECT_STATES::TIMEOUT:
-      Serial.print("Timeout connecting to wifi!");
-      Serial.println(cfg.wifi_ssid);
+    cfg = config_get_values();
+    if (strlen(cfg.wifi_ssid) == 0 || strlen(cfg.wifi_password) == 0)
+    {
+      Serial.println("Wifi SSID and/or password not set!");
       wifi_connect_state = WIFI_CONNECT_STATES::INIT;
       task_wifi_connect.restartDelayed(1000);
       break;
+    }
 
-    case WIFI_CONNECT_STATES::CONNECTED:
-      // TODO: print_wifi_status();
-      break;
+    WiFi.begin(cfg.wifi_ssid, cfg.wifi_password);
+    started_connecting_run_count = task_wifi_connect.getRunCounter();
+    led_wifi_connecting();
+    wifi_connect_state = WIFI_CONNECT_STATES::CONNECTING;
+    break;
 
-    case WIFI_CONNECT_STATES::FAILURE:
-      break;
+  case WIFI_CONNECT_STATES::CONNECTING:
+    connect_try_count =
+        task_wifi_connect.getRunCounter() - started_connecting_run_count;
+    if (wifi_status == WL_CONNECTED)
+    {
+      led_queue_flush();
+      led_wifi_connected();
+      wifi_connect_state = WIFI_CONNECT_STATES::CONNECTED;
+      // TODO: move server and mqtt stuff to their own tasks to separate
+      server.begin();
+      mqtt_connect();
+      task_wifi_handle_client.enable();
+    }
+    else if (connect_try_count >= 10)
+    {
+      wifi_connect_state = WIFI_CONNECT_STATES::TIMEOUT;
+    }
+    break;
+
+  case WIFI_CONNECT_STATES::TIMEOUT:
+    Serial.print("Timeout connecting to wifi!");
+    Serial.println(cfg.wifi_ssid);
+    wifi_connect_state = WIFI_CONNECT_STATES::INIT;
+    task_wifi_connect.restartDelayed(1000);
+    break;
+
+  case WIFI_CONNECT_STATES::CONNECTED:
+    print_wifi_status();
+    break;
+
+  case WIFI_CONNECT_STATES::FAILURE:
+    break;
   }
 }
 
-void print_wifi_status() {
+void print_wifi_status()
+{
   // print the SSID of the network you're attached to:
   Serial.print("SSID: ");
   Serial.println(WiFi.SSID());
@@ -169,13 +194,17 @@ void print_wifi_status() {
   Serial.println(" dBm");
 }
 
-void print_mac_address(byte mac[]) {
-  for (int i = 5; i >= 0; i--) {
-    if (mac[i] < 16) {
+void print_mac_address(byte mac[])
+{
+  for (int i = 5; i >= 0; i--)
+  {
+    if (mac[i] < 16)
+    {
       Serial.print("0");
     }
     Serial.print(mac[i], HEX);
-    if (i > 0) {
+    if (i > 0)
+    {
       Serial.print(":");
     }
   }
@@ -183,14 +212,17 @@ void print_mac_address(byte mac[]) {
 }
 
 template <size_t N>
-void tokenize(std::array<String, N>& targets, String source, String delimiter) {
+void tokenize(std::array<String, N> &targets, String source, String delimiter)
+{
   int start = 0;
   int end = 0;
-  for (auto& target : targets) {
+  for (auto &target : targets)
+  {
     end = source.indexOf(delimiter, start);
     if (end != -1)
       target = source.substring(start, end);
-    else {
+    else
+    {
       // If we find no match, the delimiter is either not present or it is the
       // part of the string after the last delimiter occurence
       target = source.substring(start, source.length());
@@ -200,26 +232,33 @@ void tokenize(std::array<String, N>& targets, String source, String delimiter) {
   }
 }
 
-void wifi_handle_client() {
+void wifi_handle_client()
+{
   bool reboot = false;
+  bool respond = false;
   // compare the previous status to the current status
-  if (wifi_status != WiFi.status()) {
+  if (wifi_status != WiFi.status())
+  {
     // it has changed update the variable
     wifi_status = WiFi.status();
 
-    if (wifi_status == WL_AP_CONNECTED) {
+    if (wifi_status == WL_AP_CONNECTED)
+    {
       // a device has connected to the AP
       Serial.println(F("Device connected to AP"));
-    } else {
+    }
+    else
+    {
       // a device has disconnected from the AP, and we are back in listening
       // mode
       Serial.println(F("Device disconnected from AP"));
     }
   }
 
-  WiFiClient client = server.available();  // listen for incoming clients
+  WiFiClient client = server.available(); // listen for incoming clients
 
-  if (client) {
+  if (client)
+  {
     // make a String to hold incoming data from the client
     static String request_string = "";
 
@@ -227,18 +266,23 @@ void wifi_handle_client() {
     std::array<String, 2> request_words;
     std::array<String, 2> url_parts;
 
-    String& method = request_words[0];
-    String& url = url_parts[0];
-    String& params = url_parts[1];
+    String &method = request_words[0];
+    String &url = url_parts[0];
+    String &params = url_parts[1];
 
-    if (client.connected()) {
+    if (client.connected())
+    {
       // loop while the client's connected
-      while (client.available()) {
+      auto avl = client.available();
+      Serial.println(avl);
+      while (avl)
+      {
         // if there's bytes to read from the client,
-        char c = client.read();  // read a byte, then
+        char c = client.read(); // read a byte, then
         request_string += String(c);
 
-        if (request_string.endsWith("\r\n\r\n")) {
+        if (request_string.endsWith("\r\n\r\n"))
+        {
           tokenize(request_words, request_string, " ");
           tokenize(url_parts, request_words[1], "?");
           method = request_words[0];
@@ -248,16 +292,23 @@ void wifi_handle_client() {
           Serial.println(method);
           Serial.println(url);
           Serial.println(params);
-        } else {
-          continue;
-        }
 
+          respond = true;
+          break;
+        }
+      }
+
+      if (respond == true)
+      {
         /**
          * WPA Connection Routes
          */
-        if (wifi_status == WL_CONNECTED) {
-          if (method == F("GET")) {
-            if (url == F("/api/sensor")) {
+        if (wifi_status == WL_CONNECTED)
+        {
+          if (method == F("GET"))
+          {
+            if (url == F("/api/sensor"))
+            {
               client.println("HTTP/1.1 200 OK");
               client.println("Content-type:application/json");
               client.println();
@@ -269,7 +320,9 @@ void wifi_handle_client() {
               doc["brightness"] = get_brightness();
 
               serializeJson(doc, client);
-            } else if (url == F("/")) {
+            }
+            else if (url == F("/"))
+            {
               cfg = config_get_values();
               client.println("HTTP/1.1 200 OK");
               client.println("Content-type:text/html");
@@ -280,13 +333,20 @@ void wifi_handle_client() {
               client.print("<div class=\"box\"><h1>CO2 Ampel Status</h1>");
               client.print("<span class=\"css-ampel");
               int ampel = get_co2();
-              if (ampel < START_YELLOW) {
+              if (ampel < START_YELLOW)
+              {
                 client.print(" ampelgruen");
-              } else if (ampel < START_RED) {
+              }
+              else if (ampel < START_RED)
+              {
                 client.print(" ampelgelb");
-              } else if (ampel < START_RED_BLINK) {
+              }
+              else if (ampel < START_RED_BLINK)
+              {
                 client.print(" ampelrot");
-              } else {  // rot blinken
+              }
+              else
+              { // rot blinken
                 client.print(" ampelrotblinkend");
               }
               client.print("\"><span class=\"cssampelspan\"></span></span>");
@@ -299,15 +359,19 @@ void wifi_handle_client() {
               client.print(get_humidity());
               client.print(" %<br>Helligkeit: ");
               int brgt = get_brightness();
-              if (brgt == 1024) {
+              if (brgt == 1024)
+              {
                 client.print("--");
-              } else {
+              }
+              else
+              {
                 client.print(brgt);
               }
 
               client.print("<br><br>");
               client.print("MQTT Broker is ");
-              if (!mqtt_broker_connected()) {
+              if (!mqtt_broker_connected())
+              {
                 client.print("not ");
               }
               client.print("connected.");
@@ -320,9 +384,11 @@ void wifi_handle_client() {
               client.println();
             }
           }
-          if (method == F("POST")) {
+          if (method == F("POST"))
+          {
             // TODO: Start of the config API
-            if (url == F("/save")) {
+            if (url == F("/save"))
+            {
               client.println("HTTP/1.1 200 OK");
               client.println("Content-type:text/html");
               client.println();
@@ -338,9 +404,12 @@ void wifi_handle_client() {
         /**
          * Access Point Routes
          */
-        if (wifi_status == WL_AP_CONNECTED) {
-          if (method == F("GET")) {
-            if (url == F("/")) {
+        if (wifi_status == WL_AP_CONNECTED)
+        {
+          if (method == F("GET"))
+          {
+            if (url == F("/"))
+            {
               client.println("HTTP/1.1 200 OK");
               client.println("Content-type:text/html");
               client.println();
@@ -404,11 +473,14 @@ void wifi_handle_client() {
 
               client.print("<label for=buzzer>Buzzer</label>");
               client.print("<select id=buzzer name=buzzer size=2>");
-              if (cfg.buzzer_enabled) {
+              if (cfg.buzzer_enabled)
+              {
                 client.print(
                     "<option value=\"true\" selected > Enabled</ option> ");
                 client.print(" < option value =\"false\">Disabled</option>");
-              } else {
+              }
+              else
+              {
                 client.print("<option value=\"true\">Enabled</option>");
                 client.print(
                     "<option value=\"false\" selected>Disabled</option>");
@@ -418,11 +490,14 @@ void wifi_handle_client() {
 
               client.print("<label for=led>LEDs</label>");
               client.print("<select id=led name=led size=2>");
-              if (cfg.light_enabled) {
+              if (cfg.light_enabled)
+              {
                 client.print(
                     "<option value=\"true\" selected > Enabled</ option> ");
                 client.print(" < option value =\"false\">Disabled</option>");
-              } else {
+              }
+              else
+              {
                 client.print("<option value=\"true\">Enabled</option>");
                 client.print(
                     "<option value=\"false\" selected>Disabled</option>");
@@ -432,10 +507,13 @@ void wifi_handle_client() {
 
               client.print("<label for=format>Format</label>");
               client.print("<select id=format name=format size=2>");
-              if (cfg.mqtt_format == 0) {
+              if (cfg.mqtt_format == 0)
+              {
                 client.print("<option value=\"0\" selected > JSON</ option> ");
                 client.print(" < option value =\"1\">Influx</option>");
-              } else {
+              }
+              else
+              {
                 client.print("<option value=\"0\">JSON</option>");
                 client.print("<option value=\"1\" selected>Influx</option>");
               };
@@ -458,9 +536,12 @@ void wifi_handle_client() {
               client.print(ap_root_html_footer);
               client.println();
             }
-          } else if (method == F("POST")) {
+          }
+          else if (method == F("POST"))
+          {
             // API should be the same for AP and WPA mode?
-            if (url == F("/save")) {
+            if (url == F("/save"))
+            {
               client.println("HTTP/1.1 200 OK");
               client.println("Content-type:text/html");
               client.println();
@@ -470,11 +551,11 @@ void wifi_handle_client() {
             }
           }
         }
+        // close the connection:
+        client.stop();
+        request_string = "";
       }
     }
-    // close the connection:
-    client.stop();
-    request_string = "";
   }
 }
 

@@ -210,6 +210,13 @@ String get_light_enabled(command_argument_t* arguments,
   return String(cfg.light_enabled);
 }
 
+String get_led_brightness(command_argument_t* arguments,
+                          int argument_index,
+                          char* value) {
+  device_config_t cfg = config_get_values();
+  return String(cfg.led_brightness);
+}
+
 String set_handler(command_argument_t* arguments,
                    int argument_index,
                    char* value) {
@@ -368,6 +375,17 @@ String set_light_enabled(command_argument_t* arguments,
   return String(cfg.light_enabled);
 }
 
+String set_led_brightness(command_argument_t* arguments,
+                          int argument_index,
+                          char* value) {
+  device_config_t cfg = config_get_values();
+  if (parse_int(value, &cfg.led_brightness) != 0)
+    return String("Error setting led_brightness!");
+  config_set_values(cfg);
+  cfg = config_get_values();
+  return String(cfg.led_brightness);
+}
+
 String reboot_handler(command_argument_t* arguments,
                       int argument_index,
                       char* value) {
@@ -397,6 +415,7 @@ command_argument_t arguments[] = {
     {"mqtt_password", &get_mqtt_password, &set_mqtt_password},
     {"mqtt_format", &get_mqtt_format, &set_mqtt_format},
     {"light_enabled", &get_light_enabled, &set_light_enabled},
+    {"led_brightness", &get_led_brightness, &set_led_brightness},
 };
 
 int find_index(const char* argument,

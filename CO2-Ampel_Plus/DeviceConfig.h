@@ -17,6 +17,7 @@ typedef struct {
   int mqtt_format;
   bool light_enabled;
   bool buzzer_enabled;
+  int led_brightness;
 } device_config_t;
 
 void config_set_factory_defaults();

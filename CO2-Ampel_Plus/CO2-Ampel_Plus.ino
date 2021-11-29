@@ -89,17 +89,18 @@ void setup() {
    */
   if (!config_is_initialized() || modeButton.isPressed()) {
     Serial.println("Loading factory defaults");
-    led_state_queue.push(
-        led_state_t{set_leds_blink, 10, 20, std::vector<uint32_t>{LED_RED}});
+    led_state_queue.push(led_state_t{set_leds_blink, 200, 20 * 200,
+                                     std::vector<uint32_t>{LED_RED}, 0});
     config_set_factory_defaults();
     run_until_queue_size(0);
   }
 
   led_state_queue.push(led_state_t{
-      set_leds_circle_cw, 50, 32,
-      std::vector<uint32_t>{LED_RED, LED_YELLOW, LED_GREEN, LED_BLUE}});
+      set_leds_circle_cw, 50, 32 * 50,
+      std::vector<uint32_t>{LED_RED, LED_YELLOW, LED_GREEN, LED_BLUE}, 0});
   led_state_queue.push(
-      led_state_t{set_leds_on, 50, -1, std::vector<uint32_t>{LED_WHITE}});
+      led_state_t{set_leds_on, 50, -1, std::vector<uint32_t>{LED_WHITE}, 0});
+
   run_until_queue_size(1);
   led_queue_flush();
 
