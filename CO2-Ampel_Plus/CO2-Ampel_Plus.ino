@@ -128,6 +128,7 @@ void setup() {
   task_serial_handler.enable();
   task_trigger_read_light_sensor.enable();
   task_read_co2_sensor.enable();
+  task_mqtt_loop.enable();
 }
 
 void loop() {
@@ -141,8 +142,6 @@ void loop() {
     wifi_state = WIFI_MODE_AP_INIT;
   }
   */
-
-  // mqtt_loop();
 
   ts.execute();
 }

@@ -3,6 +3,8 @@
 #include "Config.h"
 #include "DeviceConfig.h"
 #include "LED.h"
+#include "LightSensor.h"
+#include "scheduler.h"
 
 WiFiClient wifi_client;
 PubSubClient mqttClient(wifi_client);
@@ -57,17 +59,37 @@ void mqtt_loop() {
   mqttClient.loop();
 }
 
+Task task_mqtt_loop(  //
+    MQTT_LOOP_TASK_PERIOD_MS* TASK_MILLISECOND,
+    -1,
+    mqtt_loop,
+    &ts);
+
 bool mqtt_broker_connected() {
   return mqttClient.connected();
 }
 
-void mqtt_send_value(int co2, float temp, int hum, int lux) {
+void mqtt_send_value();
+Task task_mqtt_send_value(  //
+    10 * TASK_MILLISECOND,
+    -1,
+    mqtt_send_value,
+    &ts);
+
+void mqtt_send_value() {
+  Serial.println("mqtt_send_value");
   if (mqttClient.connected()) {
+    Serial.println("mqtt_send_value 1");
     device_config_t cfg = config_get_values();
     char mqttTopic[128];
     char mqttMessage[512];
     char tempMessage[20];
-    sprintf(tempMessage, "%d.%02d", (int)temp, (int)(temp * 100) % 100);
+
+    co2_sensor_measurement_t co2_measurement = get_co2_sensor_measurement();
+    int brightness = get_ambient_brightness();
+
+    sprintf(tempMessage, "%d.%02d", co2_measurement.temperature,
+            (int)(co2_measurement.temperature * 100) % 100);
 
     if (cfg.mqtt_format ==
         0) {  // sending data in JSON Format to specified topic...
@@ -77,10 +99,13 @@ void mqtt_send_value(int co2, float temp, int hum, int lux) {
       Serial.print("TempMQTTMessage: ");
       Serial.println(tempMessage);
 #endif
-      sprintf(
-          mqttMessage,
-          "{\"co2\":\"%i\",\"temp\":\" %s \",\"hum\":\"%i\",\"lux\":\"%i\"}",
-          co2, tempMessage, hum, lux);
+      DynamicJsonDocument doc(256);
+      doc["co2"] = co2_measurement.co2;
+      doc["temp"] = co2_measurement.temperature;
+      doc["hum"] = co2_measurement.humidity;
+      doc["lux"] = get_ambient_brightness();
+      serializeJson(doc, mqttMessage);
+
       if (mqttClient.publish(mqttTopic, mqttMessage)) {
         Serial.println("Data publication successfull.");
 #if DEBUG_LOG > 0
@@ -97,8 +122,10 @@ void mqtt_send_value(int co2, float temp, int hum, int lux) {
 
     } else {  // sending data in influxdb format
 
+      // TODO: this is probably broken!
       sprintf(mqttMessage, "co2ampel,name=%s,co2=%i,temp=%s,hum=%i,lux=%i",
-              cfg.ampel_name, co2, tempMessage, hum, lux);
+              cfg.ampel_name, co2_measurement.co2, tempMessage,
+              co2_measurement.humidity, brightness);
       if (mqttClient.publish(cfg.mqtt_topic, mqttMessage)) {
         Serial.println("Data publication successfull.");
 
@@ -115,14 +142,13 @@ void mqtt_send_value(int co2, float temp, int hum, int lux) {
             "large.");
       };
     }
-
   } else {
     Serial.println(
         "Data publication failed, client is not connected. Trying to "
         "reconnect.");
     mqtt_connect();
   }
-  mqttClient.loop();
+  task_mqtt_send_value.disable();
 }
 
 void mqtt_message_received(char* topic, byte* payload, unsigned int length) {

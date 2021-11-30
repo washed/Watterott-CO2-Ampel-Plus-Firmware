@@ -33,6 +33,7 @@ void sensor_init();
 void sensor_calibration();
 void sensor_set_temperature_offset(float offset);
 
+co2_sensor_measurement_t get_co2_sensor_measurement();
 float get_temperature();
 unsigned int get_co2();
 float get_humidity();

@@ -28,6 +28,10 @@ co2_sensor_measurement_t co2_sensor_measurement = {
     0,
 };
 
+co2_sensor_measurement_t get_co2_sensor_measurement() {
+  return co2_sensor_measurement;
+}
+
 unsigned int get_co2() {
   return co2_sensor_measurement.co2;
 }
@@ -193,7 +197,6 @@ void read_co2_sensor() {
                         LIGHT_SENSOR_MEASUREMENT_COUNT>
       measurements;
 
-  // neue Sensordaten auslesen
   if (co2_sensor.dataAvailable()) {
     co2_sensor.readMeasurement();
     if (!measurements.isFull()) {
@@ -213,14 +216,12 @@ void read_co2_sensor() {
     co2_sensor_measurement = sum / measurement_count;
   }
 
-  /*
-  TODO: This has to go into a decoupled mqtt handler
   if (wifi_is_connected()) {
-    mqtt_send_value(co2, temp, humi, get_ambient_brightness());
+    Serial.println("ENABLE task_mqtt_send_value");
+    task_mqtt_send_value.enable();
   }
-  */
 
-  // TODO: This might also go into a decoupled ampel task
+  // TODO: This might go into a decoupled ampel task
   if (co2_sensor_measurement.co2 < START_GREEN) {
     led_default_on(LED_BLUE);
   } else if (co2_sensor_measurement.co2 < START_YELLOW) {
