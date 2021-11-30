@@ -273,10 +273,7 @@ void wifi_handle_client()
     if (client.connected())
     {
       // loop while the client's connected
-      auto avl = client.available();
-      Serial.println(avl);
-      while (avl)
-      {
+      while (client.available()) {
         // if there's bytes to read from the client,
         char c = client.read(); // read a byte, then
         request_string += String(c);
