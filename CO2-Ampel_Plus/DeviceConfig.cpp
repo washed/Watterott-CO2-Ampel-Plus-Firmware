@@ -29,7 +29,7 @@ void config_set_factory_defaults() {
       MQTT_FORMAT,
       LIGHT_ENABLED,
       BUZZER_ENABLED,
-      BRIGHTNESS,
+      BRIGHTNESS_AUTO,
   };
   config_store.write(_default_config);
 }

@@ -5,6 +5,7 @@
 #include "Buzzer.h"
 #include "Config.h"
 #include "DeviceConfig.h"
+#include "LightSensor.h"
 #include "NetworkManager.h"
 
 Adafruit_NeoPixel ws2812 = Adafruit_NeoPixel(NUMBER_OF_WS2312_PIXELS,
@@ -148,6 +149,20 @@ void led_queue_flush() {
   std::queue<led_state_t>().swap(led_state_queue);
 }
 
+int8_t led_brightness_step(uint8_t target_brightness) {
+  float step =
+      float(target_brightness - led_brightness) * LED_BRIGHTNESS_FADE_FACTOR;
+
+  if (step > 0 && step < 1)
+    step = 1;
+  else if (step < 0 && step > -1)
+    step = -1;
+  else
+    step = static_cast<int8_t>(roundl(step));
+
+  return step;
+}
+
 void led() {
   bool update_required = false;
   static int32_t current_state_run_count = 0;
@@ -180,16 +195,14 @@ void led() {
     update_required = true;
   }
 
-  if (led_brightness != cfg.led_brightness) {
-    float step =
-        float(cfg.led_brightness - led_brightness) * LED_BRIGHTNESS_FADE_FACTOR;
-
-    if (step > 0 && step < 1)
-      step = 1;
-    else if (step < 0 && step > -1)
-      step = -1;
-
-    led_brightness += step;
+  if (cfg.led_brightness == -1) {
+    auto auto_brightness = static_cast<uint8_t>(
+        lroundf(static_cast<float>(get_ambient_brightness()) /
+                static_cast<float>(LIGHT_SENSOR_MAX_BRIGHTNESS) * 255.0f));
+    led_brightness += led_brightness_step(auto_brightness);
+    update_required = true;
+  } else if (led_brightness != cfg.led_brightness) {
+    led_brightness += led_brightness_step(cfg.led_brightness);
     update_required = true;
   }
 

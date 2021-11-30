@@ -62,7 +62,8 @@
 
 //--- LED configuration ---
 #define LIGHT_ENABLED true
-#define BRIGHTNESS 180     // 1-255
+#define BRIGHTNESS 180  // 1-255
+#define BRIGHTNESS_AUTO -1
 #define BRIGHTNESS_DARK 5  // 1-100%
 #define NUMBER_OF_WS2312_PIXELS 4
 #define NUMBER_OF_WS2812_LEDS 4
