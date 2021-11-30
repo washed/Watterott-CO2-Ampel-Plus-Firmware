@@ -5,7 +5,7 @@
 #include "scheduler.h"
 
 extern Task task_trigger_read_light_sensor;
-uint16_t get_brightness();
+uint16_t get_ambient_brightness();
 
 enum LIGHT_SENSOR_STATES {
   PRE_BLANK,

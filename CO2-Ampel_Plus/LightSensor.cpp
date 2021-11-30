@@ -5,7 +5,7 @@
 
 uint16_t ambient_brightness = 0;
 
-uint16_t get_brightness() {
+uint16_t get_ambient_brightness() {
   return ambient_brightness;
 }
 

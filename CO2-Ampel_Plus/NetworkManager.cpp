@@ -271,7 +271,7 @@ void wifi_handle_client() {
               doc["co2"] = get_co2();
               doc["temperature"] = get_temperature();
               doc["humidity"] = get_humidity();
-              doc["brightness"] = get_brightness();
+              doc["brightness"] = get_ambient_brightness();
 
               serializeJson(doc, client);
             } else if (url == F("/")) {
@@ -303,7 +303,7 @@ void wifi_handle_client() {
               client.print(" &ordm;C<br>Luftfeuchtigkeit: ");
               client.print(get_humidity());
               client.print(" %<br>Helligkeit: ");
-              int brgt = get_brightness();
+              int brgt = get_ambient_brightness();
               if (brgt == 1024) {
                 client.print("--");
               } else {

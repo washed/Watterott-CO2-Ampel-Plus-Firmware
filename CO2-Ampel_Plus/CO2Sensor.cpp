@@ -52,7 +52,7 @@ void show_data(void)  // Daten anzeigen
   Serial.print("humidity: ");
   Serial.println(get_humidity(), 1);  //%
   Serial.print("light: ");
-  Serial.println(get_brightness());
+  Serial.println(get_ambient_brightness());
   if (wifi_is_connected()) {
     print_wifi_status();
   }
@@ -216,7 +216,7 @@ void read_co2_sensor() {
   /*
   TODO: This has to go into a decoupled mqtt handler
   if (wifi_is_connected()) {
-    mqtt_send_value(co2, temp, humi, get_brightness());
+    mqtt_send_value(co2, temp, humi, get_ambient_brightness());
   }
   */
 
