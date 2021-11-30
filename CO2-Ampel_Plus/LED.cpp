@@ -174,8 +174,6 @@ void led() {
       step = -1;
 
     led_brightness += step;
-    Serial.print("LED: ");
-    Serial.println(led_brightness);
     update_required = true;
   }
 
