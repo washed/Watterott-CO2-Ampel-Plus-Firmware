@@ -1,12 +1,12 @@
 #include "NetworkManager.h"
 #include <ArduinoJson.h>
 #include <array>
+#include "CO2Sensor.h"
 #include "Config.h"
 #include "DeviceConfig.h"
 #include "LEDPatterns.h"
 #include "LightSensor.h"
 #include "RequestParser.h"
-#include "Sensor.h"
 
 char mdnsName[] = "wifi101";  // the MDNS name that the board will respond to
                               // after WiFi settings have been provisioned

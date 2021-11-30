@@ -3,11 +3,11 @@
 #include <SPI.h>
 #include <WiFi101.h>
 #include "Buzzer.h"
+#include "CO2Sensor.h"
 #include "HTMLAPMode.h"
 #include "HTMLWPAMode.h"
 #include "LED.h"
 #include "MQTTManager.h"
-#include "Sensor.h"
 #include "scheduler.h"
 
 bool wifi_is_connected();

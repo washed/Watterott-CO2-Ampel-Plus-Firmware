@@ -26,13 +26,13 @@
 #include <WiFi101.h>
 #include <vector>
 #include "Buzzer.h"
+#include "CO2Sensor.h"
 #include "Config.h"
 #include "DeviceConfig.h"
 #include "LED.h"
 #include "LightSensor.h"
 #include "MQTTManager.h"
 #include "NetworkManager.h"
-#include "Sensor.h"
 #include "SerialCommand.h"
 
 Scheduler ts;
@@ -127,6 +127,7 @@ void setup() {
 
   task_serial_handler.enable();
   task_trigger_read_light_sensor.enable();
+  task_read_co2_sensor.enable();
 }
 
 void loop() {
@@ -142,7 +143,6 @@ void loop() {
   */
 
   // mqtt_loop();
-  sensor_handler();
 
   ts.execute();
 }

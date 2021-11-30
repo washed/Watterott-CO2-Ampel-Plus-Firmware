@@ -1,14 +1,15 @@
-#include "Sensor.h"
+#include "CO2Sensor.h"
+#include <CircularBuffer.h>
 #include <JC_Button.h>
 #include <SparkFun_SCD30_Arduino_Library.h>
 #include <Wire.h>
 #include "Buzzer.h"
 #include "Config.h"
 #include "DeviceConfig.h"
-// #include "LED.h"
 #include "LEDPatterns.h"
 #include "LightSensor.h"
 #include "NetworkManager.h"
+#include "scheduler.h"
 #if DISPLAY_OUTPUT > 0
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -20,19 +21,36 @@ Adafruit_SSD1306 display(128, 64);  // 128x64 Pixel
 #endif
 
 SCD30 co2_sensor;
-unsigned int co2 = STARTWERT, co2_average = STARTWERT;
-float temp = 0, humi = 0;
-static int dunkel = 0;
+
+co2_sensor_measurement_t co2_sensor_measurement = {
+    STARTWERT,
+    0,
+    0,
+};
+
+unsigned int get_co2() {
+  return co2_sensor_measurement.co2;
+}
+
+float get_temperature() {
+  return co2_sensor_measurement.temperature;
+}
+
+float get_humidity() {
+  return co2_sensor_measurement.humidity;
+}
+
+// static int dunkel = 0;
 
 void show_data(void)  // Daten anzeigen
 {
 #if SERIAL_OUTPUT > 0
   Serial.print("co2: ");
-  Serial.println(co2);  // ppm
+  Serial.println(get_co2());  // ppm
   Serial.print("temp: ");
-  Serial.println(temp, 1);  //°C
+  Serial.println(get_temperature(), 1);  //°C
   Serial.print("humidity: ");
-  Serial.println(humi, 1);  //%
+  Serial.println(get_humidity(), 1);  //%
   Serial.print("light: ");
   Serial.println(get_brightness());
   if (wifi_is_connected()) {
@@ -55,6 +73,7 @@ void show_data(void)  // Daten anzeigen
   return;
 }
 
+/*
 void sensor_calibration() {
 #if DEBUG_LOG > 0
   Serial.println("Start CO2 sensor calibration");
@@ -113,6 +132,7 @@ void sensor_calibration() {
     }
   }
 }
+*/
 
 void sensor_init() {
   // co2_sensor.setForcedRecalibrationFactor(1135); //400ppm = Frischluft
@@ -161,57 +181,64 @@ void sensor_set_temperature_offset(float offset) {
 #endif
 }
 
-void sensor_handler() {
-  unsigned int ampel = 0;
-  co2_average = (co2_average + co2) / 2;  // Berechnung jede Sekunde
+void read_co2_sensor();
+Task task_read_co2_sensor(  //
+    CO2_SENSOR_TASK_PERIOD_MS* TASK_MILLISECOND,
+    -1,
+    read_co2_sensor,
+    &ts);
 
-#if USE_AVERAGE > 0
-  ampel = co2_average;
-#else
-  ampel = co2;
-#endif
+void read_co2_sensor() {
+  static CircularBuffer<co2_sensor_measurement_t,
+                        LIGHT_SENSOR_MEASUREMENT_COUNT>
+      measurements;
 
   // neue Sensordaten auslesen
   if (co2_sensor.dataAvailable()) {
-    co2 = co2_sensor.getCO2();
-    temp = co2_sensor.getTemperature();
-    humi = co2_sensor.getHumidity();
-    if (wifi_is_connected()) {
-      mqtt_send_value(co2, temp, humi, get_brightness());
+    co2_sensor.readMeasurement();
+    if (!measurements.isFull()) {
+      measurements.push({co2_sensor.getCO2(), co2_sensor.getTemperature(),
+                         co2_sensor.getHumidity()});
     }
-
-    // TODO: show_data();
   }
 
-  // Ampel
-  if (ampel < START_GREEN) {
+  if (measurements.isFull()) {
+    co2_sensor_measurement_t sum = {0, 0, 0};
+    uint32_t measurement_count = 0;
+
+    while (!measurements.isEmpty()) {
+      sum += measurements.shift();
+      measurement_count++;
+    }
+    co2_sensor_measurement = sum / measurement_count;
+  }
+
+  /*
+  TODO: This has to go into a decoupled mqtt handler
+  if (wifi_is_connected()) {
+    mqtt_send_value(co2, temp, humi, get_brightness());
+  }
+  */
+
+  // TODO: This might also go into a decoupled ampel task
+  if (co2_sensor_measurement.co2 < START_GREEN) {
     led_default_on(LED_BLUE);
-  } else if (ampel < START_YELLOW) {
+  } else if (co2_sensor_measurement.co2 < START_YELLOW) {
     led_default_on(LED_GREEN);
-  } else if (ampel < START_RED) {
+  } else if (co2_sensor_measurement.co2 < START_RED) {
     led_default_on(LED_YELLOW);
-  } else if (ampel < START_RED_BLINK) {
+  } else if (co2_sensor_measurement.co2 < START_RED_BLINK) {
     led_default_on(LED_RED);
-  } else if (ampel < START_VIOLET) {
+  } else if (co2_sensor_measurement.co2 < START_VIOLET) {
     led_default_blink(LED_RED);
   } else {
     led_default_blink(LED_VIOLET);
   }
 }
 
-float get_temperature() {
-  return temp;
-}
-
-unsigned int get_co2() {
-  return co2;
-}
-
-float get_humidity() {
-  return humi;
-}
-
 /*
+TODO: Do we even want to change the measurement interval if it's darker?
+Waht's the user story behind this?
 void light_something() {
   if (light < LIGHT_DARK && dunkel == 0) {
     dunkel = 1;
