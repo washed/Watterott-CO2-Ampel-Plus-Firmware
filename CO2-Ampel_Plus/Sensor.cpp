@@ -7,6 +7,7 @@
 #include "DeviceConfig.h"
 // #include "LED.h"
 #include "LEDPatterns.h"
+#include "LightSensor.h"
 #include "NetworkManager.h"
 #if DISPLAY_OUTPUT > 0
 #include <Adafruit_GFX.h>
@@ -20,9 +21,7 @@ Adafruit_SSD1306 display(128, 64);  // 128x64 Pixel
 
 SCD30 co2_sensor;
 unsigned int co2 = STARTWERT, co2_average = STARTWERT;
-unsigned int light = 1024;
 float temp = 0, humi = 0;
-static long long t_light = 0;
 static int dunkel = 0;
 
 void show_data(void)  // Daten anzeigen
@@ -35,7 +34,7 @@ void show_data(void)  // Daten anzeigen
   Serial.print("humidity: ");
   Serial.println(humi, 1);  //%
   Serial.print("light: ");
-  Serial.println(light);
+  Serial.println(get_brightness());
   if (wifi_is_connected()) {
     print_wifi_status();
   }
@@ -115,26 +114,6 @@ void sensor_calibration() {
   }
 }
 
-unsigned int light_sensor(void)  // Auslesen des Lichtsensors
-{
-  unsigned int i;
-  /*
-  uint32_t color = led_get_color();  // aktuelle Farbe speichern
-  led_off();
-  */
-
-  digitalWrite(PIN_LSENSOR_PWR, HIGH);  // Lichtsensor an
-  delay(40);                            // 40ms warten
-  i = analogRead(PIN_LSENSOR);          // 0...1024
-  delay(10);                            // 10ms warten
-  i += analogRead(PIN_LSENSOR);         // 0...1024
-  i /= 2;
-  digitalWrite(PIN_LSENSOR_PWR, LOW);  // Lichtsensor aus
-
-  // led_on_color(color);
-  return i;
-}
-
 void sensor_init() {
   // co2_sensor.setForcedRecalibrationFactor(1135); //400ppm = Frischluft
   // //400ppm = Frischluft
@@ -198,7 +177,7 @@ void sensor_handler() {
     temp = co2_sensor.getTemperature();
     humi = co2_sensor.getHumidity();
     if (wifi_is_connected()) {
-      mqtt_send_value(co2, temp, humi, light);
+      mqtt_send_value(co2, temp, humi, get_brightness());
     }
 
     // TODO: show_data();
@@ -232,24 +211,16 @@ float get_humidity() {
   return humi;
 }
 
-unsigned int get_brightness() {
-  return light;
-}
-
-void sensor_handle_brightness() {
-  if ((millis() - t_light) > (1 * 1000)) {
-    t_light = millis();
-    light = light_sensor();
-    /*
-    if (light < LIGHT_DARK && dunkel == 0) {
-      dunkel = 1;
-      co2_sensor.setMeasurementInterval(INTERVAL_DARK);
-      led_adjust_brightness(255 / (100 / BRIGHTNESS_DARK));
-    } else if (dunkel == 1) {
-      dunkel = 0;
-      co2_sensor.setMeasurementInterval(INTERVAL);
-      led_adjust_brightness(255);  // 0...255
-    }
-    */
+/*
+void light_something() {
+  if (light < LIGHT_DARK && dunkel == 0) {
+    dunkel = 1;
+    co2_sensor.setMeasurementInterval(INTERVAL_DARK);
+    led_adjust_brightness(255 / (100 / BRIGHTNESS_DARK));
+  } else if (dunkel == 1) {
+    dunkel = 0;
+    co2_sensor.setMeasurementInterval(INTERVAL);
+    led_adjust_brightness(255);  // 0...255
   }
 }
+*/

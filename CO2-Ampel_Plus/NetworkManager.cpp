@@ -4,6 +4,7 @@
 #include "Config.h"
 #include "DeviceConfig.h"
 #include "LEDPatterns.h"
+#include "LightSensor.h"
 #include "RequestParser.h"
 #include "Sensor.h"
 

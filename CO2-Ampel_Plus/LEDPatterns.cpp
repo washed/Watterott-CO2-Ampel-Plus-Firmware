@@ -60,7 +60,7 @@ void led_default_on(uint32_t color) {
   led_set_default({
       set_leds_on,
       200,
-      0,
+      -1,
       std::vector<uint32_t>{color},
   });
 }

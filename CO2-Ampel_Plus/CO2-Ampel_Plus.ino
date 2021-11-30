@@ -29,6 +29,7 @@
 #include "Config.h"
 #include "DeviceConfig.h"
 #include "LED.h"
+#include "LightSensor.h"
 #include "MQTTManager.h"
 #include "NetworkManager.h"
 #include "Sensor.h"
@@ -125,6 +126,7 @@ void setup() {
   }
 
   task_serial_handler.enable();
+  task_trigger_read_light_sensor.enable();
 }
 
 void loop() {
@@ -141,7 +143,6 @@ void loop() {
 
   // mqtt_loop();
   sensor_handler();
-  sensor_handle_brightness();
 
   ts.execute();
 }
