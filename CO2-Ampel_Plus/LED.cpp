@@ -15,12 +15,28 @@ byte led_brightness = BRIGHTNESS;
 std::vector<uint32_t> BLACK_VECT = {0};
 
 std::queue<led_state_t> led_state_queue;
+bool blank_requested = false;
+bool blanked = false;
+
+void led_blank() {
+  blank_requested = true;
+}
+
+void led_unblank() {
+  blank_requested = false;
+};
 
 bool fill_all(std::vector<uint32_t>& colors) {
   bool update_required = false;
   for (int i = 0; i < NUMBER_OF_WS2312_PIXELS; i++) {
+    // TODO: This runs everytime if we have adjusted brightness
+    // because of the scaling done in WS2812 library.
+    // Implement a function to get the raw color and compare it
+    // to a brightness scaled target color. This applies everywhere
+    // where we getPixelColor...
+    auto current_color = ws2812.getPixelColor(i);
     auto color = colors[i % colors.size()];
-    if (ws2812.getPixelColor(i) != color) {
+    if (current_color != color) {
       ws2812.setPixelColor(i, color);
       update_required = true;
     }
@@ -174,6 +190,16 @@ void led() {
       step = -1;
 
     led_brightness += step;
+    update_required = true;
+  }
+
+  if (blank_requested == true && blanked == false) {
+    ws2812.clear();
+    blanked = true;
+    update_required = true;
+  } else if (blank_requested == false && blanked == true) {
+    ws2812.setBrightness(led_brightness);
+    blanked = false;
     update_required = true;
   }
 

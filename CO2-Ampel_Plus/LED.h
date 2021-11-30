@@ -37,4 +37,7 @@ void led_queue_flush();
 void run_until_queue_size(uint32_t stop_queue_size);
 void led_set_default(led_state_t led_state);
 
+void led_blank();
+void led_unblank();
+
 #endif
