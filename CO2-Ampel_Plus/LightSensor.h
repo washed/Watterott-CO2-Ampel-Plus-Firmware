@@ -8,11 +8,12 @@ extern Task task_trigger_read_light_sensor;
 uint16_t get_ambient_brightness();
 
 enum LIGHT_SENSOR_STATES {
-  PRE_BLANK,
+  PRE_MEASURING,
   MEASURING,
-  POST_BLANK,
+  POST_MEASURING,
 };
 
+constexpr bool BLANK_LEDS_DURING_MEASUREMENT = false;
 constexpr uint32_t LIGHT_SENSOR_MAX_BRIGHTNESS = 1023;
 constexpr uint32_t LIGHT_SENSOR_TASK_PERIOD_MS = 1;
 constexpr uint32_t LIGHT_SENSOR_MEASUREMENT_PERIOD_MS = 1000;

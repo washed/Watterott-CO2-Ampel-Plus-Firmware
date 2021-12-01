@@ -17,12 +17,13 @@ Task task_read_light_sensor(  //
     &ts);
 
 void read_light_sensor() {
-  static LIGHT_SENSOR_STATES state = LIGHT_SENSOR_STATES::PRE_BLANK;
+  static LIGHT_SENSOR_STATES state = LIGHT_SENSOR_STATES::PRE_MEASURING;
   static CircularBuffer<uint16_t, LIGHT_SENSOR_MEASUREMENT_COUNT> measurements;
 
   switch (state) {
-    case LIGHT_SENSOR_STATES::PRE_BLANK:
-      led_blank();
+    case LIGHT_SENSOR_STATES::PRE_MEASURING:
+      if (BLANK_LEDS_DURING_MEASUREMENT)
+        led_blank();
       digitalWrite(PIN_LSENSOR_PWR, HIGH);
       state = LIGHT_SENSOR_STATES::MEASURING;
       task_read_light_sensor.delay(LIGHT_SENSOR_PRE_BLANKING_MS);
@@ -44,15 +45,16 @@ void read_light_sensor() {
         }
         ambient_brightness = sum / measurement_count;
 
-        state = LIGHT_SENSOR_STATES::POST_BLANK;
+        state = LIGHT_SENSOR_STATES::POST_MEASURING;
         digitalWrite(PIN_LSENSOR_PWR, LOW);
         task_read_light_sensor.delay(LIGHT_SENSOR_POST_BLANKING_MS);
       }
       break;
 
-    case LIGHT_SENSOR_STATES::POST_BLANK:
-      led_unblank();
-      state = LIGHT_SENSOR_STATES::PRE_BLANK;
+    case LIGHT_SENSOR_STATES::POST_MEASURING:
+      if (BLANK_LEDS_DURING_MEASUREMENT)
+        led_unblank();
+      state = LIGHT_SENSOR_STATES::PRE_MEASURING;
       task_read_light_sensor.disable();
   }
 }
