@@ -1,5 +1,5 @@
-#ifndef SENSOR_H
-#define SENSOR_H
+#ifndef CO2SENSOR_H
+#define CO2SENSOR_H
 #include <Arduino.h>
 #include "MQTTManager.h"
 #include "scheduler.h"
@@ -34,8 +34,5 @@ void sensor_calibration();
 void sensor_set_temperature_offset(float offset);
 
 co2_sensor_measurement_t get_co2_sensor_measurement();
-float get_temperature();
-unsigned int get_co2();
-float get_humidity();
 
 #endif

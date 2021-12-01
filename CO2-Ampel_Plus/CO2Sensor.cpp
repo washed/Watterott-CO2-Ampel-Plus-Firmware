@@ -10,15 +10,6 @@
 #include "LightSensor.h"
 #include "NetworkManager.h"
 #include "scheduler.h"
-#if DISPLAY_OUTPUT > 0
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#endif
-
-#if DISPLAY_OUTPUT > 0
-Adafruit_SSD1306 display(128, 64);  // 128x64 Pixel
-// Serial.println("Use SSD1306 display");
-#endif
 
 SCD30 co2_sensor;
 
@@ -32,29 +23,15 @@ co2_sensor_measurement_t get_co2_sensor_measurement() {
   return co2_sensor_measurement;
 }
 
-unsigned int get_co2() {
-  return co2_sensor_measurement.co2;
-}
-
-float get_temperature() {
-  return co2_sensor_measurement.temperature;
-}
-
-float get_humidity() {
-  return co2_sensor_measurement.humidity;
-}
-
-// static int dunkel = 0;
-
 void show_data(void)  // Daten anzeigen
 {
 #if SERIAL_OUTPUT > 0
   Serial.print("co2: ");
-  Serial.println(get_co2());  // ppm
+  Serial.println(co2_sensor_measurement.co2);  // ppm
   Serial.print("temp: ");
-  Serial.println(get_temperature(), 1);  //°C
+  Serial.println(co2_sensor_measurement.temperature, 1);  //°C
   Serial.print("humidity: ");
-  Serial.println(get_humidity(), 1);  //%
+  Serial.println(co2_sensor_measurement.humidity, 1);  //%
   Serial.print("light: ");
   Serial.println(get_ambient_brightness());
   if (wifi_is_connected()) {
