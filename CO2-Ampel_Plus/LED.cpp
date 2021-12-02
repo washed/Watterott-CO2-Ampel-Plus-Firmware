@@ -234,7 +234,7 @@ void led_set_default(led_state_t led_state) {
   led_default_state = led_state;
 }
 
-void led_init() {
+void init_leds() {
 #if DEBUG_LOG > 0
   Serial.print("Initialise LEDs... ");
 #endif
@@ -244,6 +244,7 @@ void led_init() {
   digitalWrite(PIN_WS2812, LOW);
   ws2812.clear();
   ws2812.show();
+  led_queue_flush();
 #if DEBUG_LOG > 0
   Serial.println("done!");
 #endif

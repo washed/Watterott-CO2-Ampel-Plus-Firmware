@@ -77,9 +77,7 @@ Task task_mqtt_send_value(  //
     &ts);
 
 void mqtt_send_value() {
-  Serial.println("mqtt_send_value");
   if (mqttClient.connected()) {
-    Serial.println("mqtt_send_value 1");
     device_config_t cfg = config_get_values();
     char mqttTopic[128];
     char mqttMessage[512];
@@ -107,7 +105,6 @@ void mqtt_send_value() {
       serializeJson(doc, mqttMessage);
 
       if (mqttClient.publish(mqttTopic, mqttMessage)) {
-        Serial.println("Data publication successfull.");
 #if DEBUG_LOG > 0
         Serial.print("Message: ");
         Serial.println(mqttMessage);

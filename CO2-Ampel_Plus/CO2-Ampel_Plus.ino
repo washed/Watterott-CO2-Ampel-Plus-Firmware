@@ -30,6 +30,7 @@
 #include "Config.h"
 #include "DeviceConfig.h"
 #include "LED.h"
+#include "LEDPatterns.h"
 #include "LightSensor.h"
 #include "MQTTManager.h"
 #include "NetworkManager.h"
@@ -39,11 +40,12 @@ Scheduler ts;
 
 #define HEARTBEAT_PERIOD 1000
 void task_heartbeat_cb();
-Task task_heartbeat(HEARTBEAT_PERIOD* TASK_MILLISECOND,
-                    -1,
-                    &task_heartbeat_cb,
-                    &ts,
-                    true);
+Task task_heartbeat(  //
+    HEARTBEAT_PERIOD* TASK_MILLISECOND,
+    -1,
+    &task_heartbeat_cb,
+    &ts,
+    true);
 
 void task_heartbeat_cb() {
   Serial.print("heartbeat ");
@@ -55,8 +57,6 @@ const byte BUTTON_PIN(PIN_SWITCH);
 const unsigned long LONG_PRESS(3000);
 
 Button modeButton(BUTTON_PIN);
-
-int wifi_reconnect_attemps = WIFI_RECONNECT_ATTEMPTS;
 
 void setup() {
 #if DEBUG_LOG > 0
@@ -80,37 +80,27 @@ void setup() {
   Serial.println("in production environment!");
 #endif
 
-  task_led.enable();
-  led_init();
-
   modeButton.begin();
   modeButton.read();
-  /**
-   * Factory Reset when button is pressed while reset
-   */
+
+  // Factory Reset when button is pressed while reset
   if (!config_is_initialized() || modeButton.isPressed()) {
     Serial.println("Loading factory defaults");
-    led_state_queue.push(led_state_t{set_leds_blink, 200, 20 * 200,
-                                     std::vector<uint32_t>{LED_RED}, 0});
     config_set_factory_defaults();
-    run_until_queue_size(0);
   }
 
-  led_state_queue.push(led_state_t{
-      set_leds_circle_cw, 50, 32 * 50,
-      std::vector<uint32_t>{LED_RED, LED_YELLOW, LED_GREEN, LED_BLUE}, 0});
-  led_state_queue.push(
-      led_state_t{set_leds_on, 50, -1, std::vector<uint32_t>{LED_WHITE}, 0});
+  init_leds();
+  task_led.enable();
 
-  run_until_queue_size(1);
-  led_queue_flush();
+  led_state_queue.push(led_state_t{
+      set_leds_circle_cw, 50, -1,
+      std::vector<uint32_t>{LED_RED, LED_YELLOW, LED_GREEN, LED_BLUE}, 0});
 
   buzzer_init();
   buzzer_test();
+  init_light_sensor();
 
-  sensor_init();
-  Serial.println("Setup complete!");
-  Serial.println("------------------------");
+  task_init_co2_sensor.enable();
 
   switch (wifi_state) {
     case WIFI_MODE_AP_INIT:  // Create  an Access  Point
@@ -126,6 +116,22 @@ void setup() {
   }
 
   task_serial_handler.enable();
+
+  bool all_tasks_done = false;
+  do {
+    bool task_wifi_connect_done = !task_wifi_connect.isEnabled();
+    bool task_init_co2_sensor_done = !task_init_co2_sensor.isEnabled();
+    all_tasks_done = task_wifi_connect_done && task_init_co2_sensor_done;
+
+    ts.execute();
+  } while (!all_tasks_done);
+
+  led_default_on(LED_WHITE);
+  led_queue_flush();
+
+  Serial.println("Init complete!");
+  Serial.println("------------------------");
+
   task_trigger_read_light_sensor.enable();
   task_read_co2_sensor.enable();
   task_mqtt_loop.enable();

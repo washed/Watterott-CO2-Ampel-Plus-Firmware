@@ -5,8 +5,7 @@
 #include <vector>
 #include "scheduler.h"
 
-void led_init();
-void led_update();
+void init_leds();
 
 uint32_t led_get_color();
 void led_adjust_brightness(uint32_t);

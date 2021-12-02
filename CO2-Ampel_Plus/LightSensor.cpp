@@ -9,6 +9,12 @@ uint16_t get_ambient_brightness() {
   return ambient_brightness;
 }
 
+void init_light_sensor() {
+  pinMode(PIN_LSENSOR_PWR, OUTPUT);
+  digitalWrite(PIN_LSENSOR_PWR, LOW);
+  pinMode(PIN_LSENSOR, INPUT);
+}
+
 void read_light_sensor();
 Task task_read_light_sensor(  //
     LIGHT_SENSOR_TASK_PERIOD_MS* TASK_MILLISECOND,

@@ -115,43 +115,65 @@ void sensor_calibration() {
 }
 */
 
-void sensor_init() {
-  // co2_sensor.setForcedRecalibrationFactor(1135); //400ppm = Frischluft
-  // //400ppm = Frischluft
-  // co2_sensor.setMeasurementInterval(INTERVAL); //setze Messinterval
-  // setze Pins
+enum INIT_CO2_SENSOR_STATES {
+  INIT,
+  START,
+  STARTED,
+  FAILED,
+};
+
+void init_co2_sensor();
+Task task_init_co2_sensor(  //
+    INIT_CO2_SENSOR_TASK_PERIOD_MS* TASK_MILLISECOND,
+    -1,
+    init_co2_sensor,
+    &ts);
+
+void init_co2_sensor() {
+  static INIT_CO2_SENSOR_STATES state = INIT_CO2_SENSOR_STATES::INIT;
+  static uint32_t init_tries = 0;
+
 #if DEBUG_LOG > 0
   Serial.println("Initialize CO2 sensor");
 #endif
-  pinMode(PIN_LSENSOR_PWR, OUTPUT);
-  digitalWrite(PIN_LSENSOR_PWR, LOW);  // Lichtsensor aus
-  pinMode(PIN_LSENSOR, INPUT);
-  pinMode(PIN_SWITCH, INPUT_PULLUP);
+  switch (state) {
+    case INIT_CO2_SENSOR_STATES::INIT:
+      // TODO: This switch init should go somewhere else
+      pinMode(PIN_SWITCH, INPUT_PULLUP);
 
-  // Wire/I2C
-  Wire.begin();
-  Wire.setClock(50000);  // 50kHz, empfohlen fue SCD30
-
-#if DISPLAY_OUTPUT > 0
-  delay(500);  // 500ms warten
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3D);
-#endif
-
-  while (co2_sensor.begin(Wire, AUTO_CALIBRATION) == false) {
-    digitalWrite(PIN_LED, HIGH);
-    delay(500);
-    digitalWrite(PIN_LED, LOW);
-    delay(500);
-#if SERIAL_OUTPUT > 0
-    Serial.println("Error: CO2 sensor not found.");
-    led_queue_flush();
-    led_sensor_failure();
-#endif
+      // Wire/I2C
+      Wire.begin();
+      Wire.setClock(50000);  // 50kHz, empfohlen fue SCD30
+      state = INIT_CO2_SENSOR_STATES::START;
+      init_tries++;
+      task_init_co2_sensor.forceNextIteration();
+      break;
+    case INIT_CO2_SENSOR_STATES::START:
+      if (co2_sensor.begin(Wire, AUTO_CALIBRATION) == true) {
+        co2_sensor.setMeasurementInterval(INTERVAL);
+        // delay(INTERVAL * 1000); // TODO: this was here from before, why?
+        co2_sensor.setTemperatureOffset(TEMPERATURE_OFFSET);
+        state = INIT_CO2_SENSOR_STATES::STARTED;
+        task_init_co2_sensor.forceNextIteration();
+      } else if (init_tries < INIT_CO2_SENSOR_MAX_TRIES) {
+        Wire.end();
+        state = INIT_CO2_SENSOR_STATES::INIT;
+        task_init_co2_sensor.restartDelayed(200);
+      } else {
+        state = INIT_CO2_SENSOR_STATES::FAILED;
+        task_init_co2_sensor.forceNextIteration();
+      }
+      break;
+    case INIT_CO2_SENSOR_STATES::STARTED:
+      task_init_co2_sensor.disable();
+      break;
+    case INIT_CO2_SENSOR_STATES::FAILED:
+      Serial.println("Error: CO2 sensor not found.");
+      led_queue_flush();
+      led_sensor_failure();
+      // TODO: reboot here?
+      break;
   }
-  // co2_sensor.setForcedRecalibrationFactor(1135);
-  co2_sensor.setMeasurementInterval(INTERVAL);  // setze Messinterval
-  delay(INTERVAL * 1000);                       // Intervallsekunden warten
-  co2_sensor.setTemperatureOffset(TEMPERATURE_OFFSET);
 }
 
 void sensor_set_temperature_offset(float offset) {
@@ -194,7 +216,6 @@ void read_co2_sensor() {
   }
 
   if (wifi_is_connected()) {
-    Serial.println("ENABLE task_mqtt_send_value");
     task_mqtt_send_value.enable();
   }
 

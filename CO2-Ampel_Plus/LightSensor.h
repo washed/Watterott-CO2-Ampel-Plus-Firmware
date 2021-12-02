@@ -6,6 +6,7 @@
 
 extern Task task_trigger_read_light_sensor;
 uint16_t get_ambient_brightness();
+void init_light_sensor();
 
 enum LIGHT_SENSOR_STATES {
   PRE_MEASURING,

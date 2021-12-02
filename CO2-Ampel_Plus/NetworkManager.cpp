@@ -111,13 +111,12 @@ void wifi_wpa_connect() {
       if (strlen(cfg.wifi_ssid) == 0 || strlen(cfg.wifi_password) == 0) {
         Serial.println("Wifi SSID and/or password not set!");
         wifi_connect_state = WIFI_CONNECT_STATES::INIT;
-        task_wifi_connect.restartDelayed(1000);
+        task_wifi_connect.delay(200);
         break;
       }
 
       WiFi.begin(cfg.wifi_ssid, cfg.wifi_password);
       started_connecting_run_count = task_wifi_connect.getRunCounter();
-      led_wifi_connecting();
       wifi_connect_state = WIFI_CONNECT_STATES::CONNECTING;
       break;
 
@@ -125,8 +124,6 @@ void wifi_wpa_connect() {
       connect_try_count =
           task_wifi_connect.getRunCounter() - started_connecting_run_count;
       if (wifi_status == WL_CONNECTED) {
-        led_queue_flush();
-        led_wifi_connected();
         wifi_connect_state = WIFI_CONNECT_STATES::CONNECTED;
         // TODO: move server and mqtt stuff to their own tasks to separate
         server.begin();
@@ -146,9 +143,11 @@ void wifi_wpa_connect() {
 
     case WIFI_CONNECT_STATES::CONNECTED:
       print_wifi_status();
+      task_wifi_connect.disable();
       break;
 
     case WIFI_CONNECT_STATES::FAILURE:
+      // TODO: What do we do here? Reboot?
       break;
   }
 }
