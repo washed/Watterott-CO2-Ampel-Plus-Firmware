@@ -29,6 +29,7 @@
 #include "CO2Sensor.h"
 #include "Config.h"
 #include "DeviceConfig.h"
+#include "HTTP.h"
 #include "LED.h"
 #include "LEDPatterns.h"
 #include "LightSensor.h"
@@ -103,12 +104,15 @@ void setup() {
   task_init_co2_sensor.enable();
 
   switch (wifi_state) {
-    case WIFI_MODE_AP_INIT:  // Create  an Access  Point
-      Serial.println("Creating Access Point");
-      wifi_ap_create();
-      wifi_state = WIFI_MODE_AP_LISTEN;
-      Serial.println("------------------------");
-      break;
+      /*
+      // TODO: AP mode disabled for now
+      case WIFI_MODE_AP_INIT:  // Create  an Access  Point
+        Serial.println("Creating Access Point");
+        wifi_ap_create();
+        wifi_state = WIFI_MODE_AP_LISTEN;
+        Serial.println("------------------------");
+        break;
+      */
 
     case WIFI_MODE_WPA_CONNECT:  // Connect to WiFi
       task_wifi_connect.enable();
@@ -134,7 +138,8 @@ void setup() {
 
   task_trigger_read_light_sensor.enable();
   task_read_co2_sensor.enable();
-  task_mqtt_loop.enable();
+  task_http_server.enable();
+  task_mqtt.enable();
 }
 
 void loop() {

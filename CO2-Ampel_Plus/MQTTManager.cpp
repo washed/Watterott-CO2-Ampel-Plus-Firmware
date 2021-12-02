@@ -55,15 +55,36 @@ bool mqtt_connect() {
   return false;
 }
 
-void mqtt_loop() {
-  mqttClient.loop();
-}
+enum MQTT_STATES {
+  CONNECT,
+  CONNECTED,
+};
 
-Task task_mqtt_loop(  //
+void mqtt();
+Task task_mqtt(  //
     MQTT_LOOP_TASK_PERIOD_MS* TASK_MILLISECOND,
     -1,
-    mqtt_loop,
+    mqtt,
     &ts);
+
+void mqtt() {
+  static MQTT_STATES state = MQTT_STATES::CONNECT;
+
+  switch (state) {
+    case MQTT_STATES::CONNECT: {
+      bool connected = mqtt_connect();
+      if (connected == true) {
+        state = MQTT_STATES::CONNECTED;
+      } else {
+        task_mqtt.delay(200);
+      }
+    } break;
+
+    case MQTT_STATES::CONNECTED:
+      mqttClient.loop();
+      break;
+  }
+}
 
 bool mqtt_broker_connected() {
   return mqttClient.connected();

@@ -8,7 +8,7 @@
 
 constexpr uint32_t MQTT_LOOP_TASK_PERIOD_MS = 10;
 
-extern Task task_mqtt_loop;
+extern Task task_mqtt;
 extern Task task_mqtt_send_value;
 
 bool mqtt_connect();
