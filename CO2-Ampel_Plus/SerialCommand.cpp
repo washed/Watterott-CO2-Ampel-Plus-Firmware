@@ -6,12 +6,12 @@
 #include "errno.h"
 
 constexpr char COMMAND_TERMINATOR = ';';
-constexpr size_t _SERIAL_BUFFER_SIZE = 128;
+constexpr size_t _SERIAL_BUFFER_SIZE = 1024;
 CircularBuffer<char, _SERIAL_BUFFER_SIZE> serial_buffer;
 
-constexpr size_t _MAX_COMMAND_LENGTH = 8;
-constexpr size_t _MAX_ARGUMENT_LENGTH = 16;
-constexpr size_t _MAX_VALUE_LENGTH = 96;
+constexpr size_t _MAX_COMMAND_LENGTH = 16;
+constexpr size_t _MAX_ARGUMENT_LENGTH = 32;
+constexpr size_t _MAX_VALUE_LENGTH = 128;
 
 typedef struct {
   char command[_MAX_COMMAND_LENGTH];
@@ -75,15 +75,16 @@ int parse_float(const char* value, float* result) {
   return 1;
 }
 
-int parse_string(const char* value, char* result) {
-  if (strnlen(value, COMMAND_VAL_MAX_STR_LEN) >= COMMAND_VAL_MAX_STR_LEN) {
+template <typename T, size_t VALUE_MAX_SIZE>
+int parse_string(const char* value, T (&result)[VALUE_MAX_SIZE]) {
+  if (strnlen(value, VALUE_MAX_SIZE) >= VALUE_MAX_SIZE) {
     Serial.print("String value too long: '");
     Serial.print(value);
     Serial.print("' max ");
-    Serial.print(String(COMMAND_VAL_MAX_STR_LEN));
+    Serial.print(String(VALUE_MAX_SIZE - 1));
     Serial.print(" characters!");
   } else {
-    strncpy(result, value, COMMAND_VAL_MAX_STR_LEN);
+    strncpy(result, value, VALUE_MAX_SIZE);
     return 0;
   }
   return 1;

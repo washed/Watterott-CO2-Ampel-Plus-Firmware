@@ -32,36 +32,40 @@ format-test: build-builder-formatter
 	FORMAT_COMMAND=$(FORMAT_TEST_COMMAND)  USER="$(shell id -u):$(shell id -g)" docker-compose up arduino-builder-co2ampel-format
 
 upload:
-	arduino-cli upload CO2-Ampel_Plus -b co2ampel:samd:sb --input-dir build -p $(CO2AMPEL_DEV)
+	arduino-cli upload CO2-Ampel_Plus -b co2ampel:samd:sb --input-dir build -p ${CO2AMPEL_DEV}
 
 configure:
-	@echo -ne 'set buzzer 0;' > $(CO2AMPEL_DEV);
-	@echo -ne 'set wifi_ssid ${WIFI_SSID};' > $(CO2AMPEL_DEV);
-	@echo -ne 'set wifi_password ${WIFI_PASSWORD};' > $(CO2AMPEL_DEV);
+	@echo -ne "set buzzer 0;" > ${CO2AMPEL_DEV};
+	@echo -ne "set mqtt_broker_port 1883;" > ${CO2AMPEL_DEV};
+	@echo -ne "set mqtt_broker_address raspberrypi;" > ${CO2AMPEL_DEV};
+	@echo -ne "set mqtt_username ${MQTT_USER};" > ${CO2AMPEL_DEV};
+	@echo -ne "set mqtt_password ${MQTT_PASSWORD};" > ${CO2AMPEL_DEV};
+	@echo -ne "set wifi_ssid ${WIFI_SSID};" > ${CO2AMPEL_DEV};
+	@echo -ne "set wifi_password ${WIFI_PASSWORD};" > ${CO2AMPEL_DEV};
 	@echo "Configuring done!"
 
 ec:
-	@echo -ne 'set buzzer 1;' > $(CO2AMPEL_DEV);
-	@echo -ne 'set wifi_password ;' > $(CO2AMPEL_DEV);
-	@echo -ne 'set wifi_ssid ;' > $(CO2AMPEL_DEV);
+	@echo -ne 'set buzzer 1;' > ${CO2AMPEL_DEV};
+	@echo -ne 'set wifi_password ;' > ${CO2AMPEL_DEV};
+	@echo -ne 'set wifi_ssid ;' > ${CO2AMPEL_DEV};
 	@echo "Configuring done!"
 
 get-configure:
-	@echo -ne 'get buzzer;' > $(CO2AMPEL_DEV)
-	@echo -ne 'get wifi_ssid;' > $(CO2AMPEL_DEV)
-	@echo -ne 'get wifi_password;' > $(CO2AMPEL_DEV)
+	@echo -ne 'get buzzer;' > ${CO2AMPEL_DEV}
+	@echo -ne 'get wifi_ssid;' > ${CO2AMPEL_DEV}
+	@echo -ne 'get wifi_password;' > ${CO2AMPEL_DEV}
 
 reboot:
-	@echo -ne 'reboot;' > $(CO2AMPEL_DEV)
+	@echo -ne 'reboot;' > ${CO2AMPEL_DEV}
 
 wait-for-serial-to-go-away:
 	@echo "Wating for serial port to go away"
-	@until ! echo -ne '' > $(CO2AMPEL_DEV); do sleep 0.5s; done;
+	@until ! echo -ne '' > ${CO2AMPEL_DEV}; do sleep 0.5s; done;
 	@echo "Serial gone!"
 
 wait-for-serial-to-come-back:
 	@echo "Wating for serial port to come back..."
-	@until echo -ne '' > $(CO2AMPEL_DEV); do sleep 0.5s; done;
+	@until echo -ne '' > ${CO2AMPEL_DEV}; do sleep 0.5s; done;
 	@echo "Serial ready, waiting a bit more!"
 	@sleep 2s
 
