@@ -94,7 +94,7 @@
 #define SERIAL_OUTPUT 1   // 1 = enable serial output (115200 bps)
 #define DISPLAY_OUTPUT 0  // 1 = enable display output
 
-#define STARTWERT 500  // 500ppm, CO2 starting value
+constexpr uint16_t STARTWERT = -1;  // 500ppm, CO2 starting value
 
 //--- Only touch if you know what you're doing! ---
 // STATES

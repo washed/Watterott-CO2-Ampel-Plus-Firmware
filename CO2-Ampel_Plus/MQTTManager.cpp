@@ -104,11 +104,13 @@ void mqtt_send_value() {
     char mqttMessage[512];
     char tempMessage[20];
 
-    co2_sensor_measurement_t co2_measurement = get_co2_sensor_measurement();
+    co2_sensor_measurement_t co2_sensor_measurement;
+    bool measurement_valid = get_co2_sensor_measurement(co2_sensor_measurement);
+
     int brightness = get_ambient_brightness();
 
-    sprintf(tempMessage, "%d.%02d", co2_measurement.temperature,
-            (int)(co2_measurement.temperature * 100) % 100);
+    sprintf(tempMessage, "%d.%02d", co2_sensor_measurement.temperature,
+            (int)(co2_sensor_measurement.temperature * 100) % 100);
 
     if (cfg.mqtt_format ==
         0) {  // sending data in JSON Format to specified topic...
@@ -118,32 +120,32 @@ void mqtt_send_value() {
       Serial.print("TempMQTTMessage: ");
       Serial.println(tempMessage);
 #endif
-      DynamicJsonDocument doc(256);
-      doc["co2"] = co2_measurement.co2;
-      doc["temp"] = co2_measurement.temperature;
-      doc["hum"] = co2_measurement.humidity;
-      doc["lux"] = get_ambient_brightness();
-      serializeJson(doc, mqttMessage);
-
-      if (mqttClient.publish(mqttTopic, mqttMessage)) {
+      if (measurement_valid == true) {
+        DynamicJsonDocument doc(256);
+        doc["co2"] = co2_sensor_measurement.co2;
+        doc["temp"] = co2_sensor_measurement.temperature;
+        doc["hum"] = co2_sensor_measurement.humidity;
+        doc["lux"] = get_ambient_brightness();
+        serializeJson(doc, mqttMessage);
+        if (mqttClient.publish(mqttTopic, mqttMessage)) {
 #if DEBUG_LOG > 0
-        Serial.print("Message: ");
-        Serial.println(mqttMessage);
-        Serial.print("Topic: ");
-        Serial.print(mqttTopic);
+          Serial.print("Message: ");
+          Serial.println(mqttMessage);
+          Serial.print("Topic: ");
+          Serial.print(mqttTopic);
 #endif
-      } else {
-        Serial.println(
-            "Data publication failed, either connection lost or message too "
-            "large.");
-      };
-
+        } else {
+          Serial.println(
+              "Data publication failed, either connection lost or message too "
+              "large.");
+        };
+      }
     } else {  // sending data in influxdb format
 
       // TODO: this is probably broken!
       sprintf(mqttMessage, "co2ampel,name=%s,co2=%i,temp=%s,hum=%i,lux=%i",
-              cfg.ampel_name, co2_measurement.co2, tempMessage,
-              co2_measurement.humidity, brightness);
+              cfg.ampel_name, co2_sensor_measurement.co2, tempMessage,
+              co2_sensor_measurement.humidity, brightness);
       if (mqttClient.publish(cfg.mqtt_topic, mqttMessage)) {
         Serial.println("Data publication successfull.");
 

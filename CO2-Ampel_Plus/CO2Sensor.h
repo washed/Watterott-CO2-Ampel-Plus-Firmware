@@ -37,6 +37,6 @@ struct co2_sensor_measurement_t {
 void sensor_calibration();
 void sensor_set_temperature_offset(float offset);
 
-co2_sensor_measurement_t get_co2_sensor_measurement();
+bool get_co2_sensor_measurement(co2_sensor_measurement_t& measurement);
 
 #endif

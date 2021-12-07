@@ -1,7 +1,6 @@
 FORMAT_FILES=$(shell find CO2-Ampel_Plus -iname '*.h' -print0 -or -iname '*.cpp' -print0 -or -iname '*.ino' -print0 | xargs -0 echo)
 FORMAT_COMMAND="--style=Chromium -verbose -i $(FORMAT_FILES)"
 FORMAT_TEST_COMMAND="--style=Chromium -verbose --Werror --dry-run $(FORMAT_FILES)"
-CO2AMPEL_DEV=/dev/ttyACM0
 
 .PHONY: clean local-env build-builder build-builder-formatter build format format-test upload build-upload configure get-configure reboot
 

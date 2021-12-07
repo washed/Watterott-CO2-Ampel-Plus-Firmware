@@ -12,6 +12,7 @@
 #include "scheduler.h"
 
 SCD30 co2_sensor;
+bool measurement_valid = false;
 
 co2_sensor_measurement_t co2_sensor_measurement = {
     STARTWERT,
@@ -19,8 +20,9 @@ co2_sensor_measurement_t co2_sensor_measurement = {
     0,
 };
 
-co2_sensor_measurement_t get_co2_sensor_measurement() {
-  return co2_sensor_measurement;
+bool get_co2_sensor_measurement(co2_sensor_measurement_t& measurement) {
+  measurement = co2_sensor_measurement;
+  return measurement_valid;
 }
 
 void show_data(void)  // Daten anzeigen
@@ -213,6 +215,7 @@ void read_co2_sensor() {
       measurement_count++;
     }
     co2_sensor_measurement = sum / measurement_count;
+    measurement_valid = true;
   }
 
   if (wifi_is_connected()) {
