@@ -151,6 +151,6 @@ const String wpa_root_html_middle =
 </head>\
 <body>");
 
-// <meta http-equiv=\"refresh\" content=\"3; URL=/\">\
+// <meta http-equiv=\"refresh\" content=\"3; URL=/\">
 
 const String wpa_root_html_footer = F("</body></html>");
