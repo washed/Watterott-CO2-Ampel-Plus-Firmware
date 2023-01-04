@@ -39,7 +39,7 @@ Task task_http_server(  //
     &http_server);
 
 void http_server() {
-  bool reboot = false;
+  // bool reboot = false;
   bool respond = false;
   uint8_t wifi_status = get_wifi_status();
   static String request_string;

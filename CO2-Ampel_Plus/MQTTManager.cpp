@@ -107,7 +107,8 @@ void mqtt_send_value() {
 
     int brightness = get_ambient_brightness();
 
-    sprintf(tempMessage, "%d.%02d", co2_sensor_measurement.temperature,
+    sprintf(tempMessage, "%d.%02d",
+            static_cast<int>(co2_sensor_measurement.temperature),
             (int)(co2_sensor_measurement.temperature * 100) % 100);
 
     if (cfg.mqtt_format ==
@@ -141,7 +142,7 @@ void mqtt_send_value() {
     } else {  // sending data in influxdb format
 
       // TODO: this is probably broken!
-      sprintf(mqttMessage, "co2ampel,name=%s,co2=%i,temp=%s,hum=%i,lux=%i",
+      sprintf(mqttMessage, "co2ampel,name=%s,co2=%i,temp=%s,hum=%f,lux=%i",
               cfg.ampel_name, co2_sensor_measurement.co2, tempMessage,
               co2_sensor_measurement.humidity, brightness);
       if (mqttClient.publish(cfg.mqtt_topic, mqttMessage)) {
