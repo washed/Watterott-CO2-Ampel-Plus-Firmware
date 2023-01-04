@@ -91,8 +91,8 @@ void setup() {
   }
 
   init_heartbeat(scheduler);
-  init_buzzer(scheduler);
-  test_buzzer();
+  buzzer_init();
+  buzzer_test();
 
   init_leds(scheduler);
   led_state_queue.push(led_state_t{
