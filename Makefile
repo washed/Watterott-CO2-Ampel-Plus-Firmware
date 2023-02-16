@@ -48,8 +48,8 @@ upload:
 
 configure:
 	@echo -ne "set buzzer 0;" > ${CO2AMPEL_DEV_TTY};
-	@echo -ne "set mqtt_broker_port 1883;" > ${CO2AMPEL_DEV_TTY};
-	@echo -ne "set mqtt_broker_address ubuntu;" > ${CO2AMPEL_DEV_TTY};
+	@echo -ne "set mqtt_broker_port ${MQTT_PORT};" > ${CO2AMPEL_DEV_TTY};
+	@echo -ne "set mqtt_broker_address ${MQTT_HOST};" > ${CO2AMPEL_DEV_TTY};
 	@echo -ne "set mqtt_username ${MQTT_USER};" > ${CO2AMPEL_DEV_TTY};
 	@echo -ne "set mqtt_password ${MQTT_PASSWORD};" > ${CO2AMPEL_DEV_TTY};
 	@echo -ne "set wifi_ssid ${WIFI_SSID};" > ${CO2AMPEL_DEV_TTY};
