@@ -8,8 +8,7 @@
 
 void get_root(WiFiClient& client) {
   co2_sensor_measurement_t co2_sensor_measurement;
-  // bool measurement_valid =
-  // get_co2_sensor_measurement(co2_sensor_measurement);
+  bool measurement_valid = get_co2_sensor_measurement(co2_sensor_measurement);
   // TODO: do something with measurement_valid!
 
   // device_config_t cfg = config_get_values();
@@ -72,14 +71,37 @@ void get_api_sensor(WiFiClient& client) {
   DynamicJsonDocument doc(256);
 
   co2_sensor_measurement_t co2_sensor_measurement;
-  // bool measurement_valid =
-  // get_co2_sensor_measurement(co2_sensor_measurement);
+  bool measurement_valid = get_co2_sensor_measurement(co2_sensor_measurement);
   // TODO: do something with measurement_valid!
 
   doc["co2"] = co2_sensor_measurement.co2;
   doc["temperature"] = co2_sensor_measurement.temperature;
   doc["humidity"] = co2_sensor_measurement.humidity;
   doc["brightness"] = get_ambient_brightness();
+
+  serializeJson(doc, client);
+}
+
+void get_calibrate(WiFiClient& client) {
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-type:application/json");
+  client.println();
+
+  DynamicJsonDocument doc(256);
+
+  doc["co2CalAcked"] = calibrate_co2();
+
+  serializeJson(doc, client);
+}
+
+void get_calibrate_ok_count(WiFiClient& client) {
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-type:application/json");
+  client.println();
+
+  DynamicJsonDocument doc(256);
+
+  doc["calOkCount"] = get_cal_ok_count();
 
   serializeJson(doc, client);
 }

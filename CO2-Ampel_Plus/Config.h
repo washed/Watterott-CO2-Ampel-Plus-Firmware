@@ -91,6 +91,7 @@
 #define AUTO_CALIBRATION 0
 // 1 = use auto-clibration (sensor must be on for 7 consecutive
 // days and exposed to fresh air at least one hour per day)
+#define OUTDOOR_CO2_PPM 420
 #define SERIAL_OUTPUT 1   // 1 = enable serial output (115200 bps)
 #define DISPLAY_OUTPUT 0  // 1 = enable display output
 

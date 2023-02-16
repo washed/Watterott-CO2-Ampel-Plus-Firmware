@@ -11,6 +11,7 @@ constexpr uint32_t INIT_CO2_SENSOR_MAX_TRIES = 3;
 extern Task task_read_co2_sensor;
 constexpr uint32_t CO2_SENSOR_TASK_PERIOD_MS = 1000;
 constexpr uint32_t CO2_SENSOR_MEASUREMENT_COUNT = 2;
+constexpr uint32_t CO2_SENSOR_CAL_MEASUREMENT_COUNT = 60;
 
 struct co2_sensor_measurement_t {
   uint16_t co2;
@@ -39,5 +40,7 @@ void sensor_calibration();
 void sensor_set_temperature_offset(float offset);
 
 bool get_co2_sensor_measurement(co2_sensor_measurement_t& measurement);
+size_t get_cal_ok_count();
+bool calibrate_co2();
 
 #endif

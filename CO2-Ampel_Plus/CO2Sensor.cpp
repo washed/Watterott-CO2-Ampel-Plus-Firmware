@@ -12,6 +12,7 @@
 
 SCD30 co2_sensor;
 bool measurement_valid = false;
+size_t cal_ok_count = 0;
 
 co2_sensor_measurement_t co2_sensor_measurement = {
     STARTWERT,
@@ -22,6 +23,14 @@ co2_sensor_measurement_t co2_sensor_measurement = {
 bool get_co2_sensor_measurement(co2_sensor_measurement_t& measurement) {
   measurement = co2_sensor_measurement;
   return measurement_valid;
+}
+
+size_t get_cal_ok_count() {
+  return cal_ok_count;
+}
+
+bool calibrate_co2() {
+  return co2_sensor.setForcedRecalibrationFactor(OUTDOOR_CO2_PPM);
 }
 
 void show_data(void)  // Daten anzeigen
@@ -192,16 +201,25 @@ Task task_read_co2_sensor(  //
     read_co2_sensor);
 
 void read_co2_sensor() {
-  static CircularBuffer<co2_sensor_measurement_t,
-                        LIGHT_SENSOR_MEASUREMENT_COUNT>
+  static CircularBuffer<co2_sensor_measurement_t, CO2_SENSOR_MEASUREMENT_COUNT>
       measurements;
+
+  static CircularBuffer<co2_sensor_measurement_t,
+                        CO2_SENSOR_CAL_MEASUREMENT_COUNT>
+      cal_measurements;
 
   if (co2_sensor.dataAvailable()) {
     co2_sensor.readMeasurement();
+
+    uint16_t co2 = co2_sensor.getCO2();
+    float temp = co2_sensor.getTemperature();
+    float humidity = co2_sensor.getHumidity();
+
     if (!measurements.isFull()) {
-      measurements.push({co2_sensor.getCO2(), co2_sensor.getTemperature(),
-                         co2_sensor.getHumidity()});
+      measurements.push({co2, temp, humidity});
     }
+
+    cal_measurements.push({co2, temp, humidity});
   }
 
   if (measurements.isFull()) {
@@ -233,6 +251,20 @@ void read_co2_sensor() {
     led_default_blink(LED_RED);
   } else {
     led_default_blink(LED_VIOLET);
+  }
+
+  if (cal_measurements.isFull()) {
+    uint16_t co2_last = cal_measurements[0].co2;
+    size_t local_cal_ok_count = 0;
+    for (size_t i = 0; i < cal_measurements.size(); i++) {
+      if ((600 > cal_measurements[i].co2 && 200 < cal_measurements[i].co2) &&
+          (co2_last + 30) > cal_measurements[i].co2 &&
+          cal_measurements[i].co2 > (co2_last - 30)) {
+        local_cal_ok_count++;
+      }
+      co2_last = cal_measurements[i].co2;
+    }
+    cal_ok_count = local_cal_ok_count;
   }
 }
 
