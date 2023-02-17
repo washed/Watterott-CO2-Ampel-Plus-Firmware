@@ -214,22 +214,18 @@ void read_co2_sensor() {
     float temp = co2_sensor.getTemperature();
     float humidity = co2_sensor.getHumidity();
 
-    if (!measurements.isFull()) {
-      measurements.push({co2, temp, humidity});
-    }
-
+    measurements.push({co2, temp, humidity});
     cal_co2_measurements.push(co2);
   }
 
   if (measurements.isFull()) {
     co2_sensor_measurement_t sum = {0, 0, 0};
-    uint32_t measurement_count = 0;
 
-    while (!measurements.isEmpty()) {
-      sum += measurements.shift();
-      measurement_count++;
+    for (size_t i = 0; i < measurements.size(); i++) {
+      sum += measurements[i];
     }
-    co2_sensor_measurement = sum / measurement_count;
+
+    co2_sensor_measurement = sum / measurements.size();
     measurement_valid = true;
   }
 
