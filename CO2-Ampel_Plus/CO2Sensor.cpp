@@ -204,9 +204,8 @@ void read_co2_sensor() {
   static CircularBuffer<co2_sensor_measurement_t, CO2_SENSOR_MEASUREMENT_COUNT>
       measurements;
 
-  static CircularBuffer<co2_sensor_measurement_t,
-                        CO2_SENSOR_CAL_MEASUREMENT_COUNT>
-      cal_measurements;
+  static CircularBuffer<uint16_t, CO2_SENSOR_CAL_MEASUREMENT_COUNT>
+      cal_co2_measurements;
 
   if (co2_sensor.dataAvailable()) {
     co2_sensor.readMeasurement();
@@ -219,7 +218,7 @@ void read_co2_sensor() {
       measurements.push({co2, temp, humidity});
     }
 
-    cal_measurements.push({co2, temp, humidity});
+    cal_co2_measurements.push(co2);
   }
 
   if (measurements.isFull()) {
@@ -253,16 +252,16 @@ void read_co2_sensor() {
     led_default_blink(LED_VIOLET);
   }
 
-  if (cal_measurements.isFull()) {
-    uint16_t co2_last = cal_measurements[0].co2;
+  if (cal_co2_measurements.isFull()) {
+    uint16_t co2_last = cal_co2_measurements[0];
     size_t local_cal_ok_count = 0;
-    for (size_t i = 0; i < cal_measurements.size(); i++) {
-      if ((600 > cal_measurements[i].co2 && 200 < cal_measurements[i].co2) &&
-          (co2_last + 30) > cal_measurements[i].co2 &&
-          cal_measurements[i].co2 > (co2_last - 30)) {
+    for (size_t i = 0; i < cal_co2_measurements.size(); i++) {
+      if ((600 > cal_co2_measurements[i] && 200 < cal_co2_measurements[i]) &&
+          (co2_last + 30) > cal_co2_measurements[i] &&
+          cal_co2_measurements[i] > (co2_last - 30)) {
         local_cal_ok_count++;
       }
-      co2_last = cal_measurements[i].co2;
+      co2_last = cal_co2_measurements[i];
     }
     cal_ok_count = local_cal_ok_count;
   }
