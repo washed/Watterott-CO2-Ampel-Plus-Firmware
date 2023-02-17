@@ -135,6 +135,8 @@ void setup() {
 
   init_light_sensor(scheduler);
   init_co2_sensor(scheduler);
+
+  // TODO: http server is broken after wifi reconnect and need fixing
   init_http_server(scheduler);
   init_mqtt(scheduler);
 }

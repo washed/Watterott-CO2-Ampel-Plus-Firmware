@@ -68,6 +68,7 @@
 #define NUMBER_OF_WS2312_PIXELS 4
 #define NUMBER_OF_WS2812_LEDS 4
 
+// TODO: we need some color correction here depending on led brightness
 #define LED_GREEN 0x00FF00
 #define LED_YELLOW 0xFFA000
 #define LED_RED 0xFF0000
