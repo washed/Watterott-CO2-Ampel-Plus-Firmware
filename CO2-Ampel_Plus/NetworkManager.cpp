@@ -158,7 +158,6 @@ void wifi_wpa_monitor() {
           task_wifi_connect.enable();
           break;
         default:
-          Serial.println(status);
           break;
       }
       break;
