@@ -66,7 +66,6 @@ void http_server() {
         if (client.connected()) {
           while (client.available()) {
             request_string.concat(char(client.read()));
-            Serial.println(request_string);
 
             if (request_string.endsWith("\r\n\r\n")) {
               tokenize(request_words, request_string, " ");
@@ -75,9 +74,11 @@ void http_server() {
               url = url_parts[0];
               params = url_parts[1];
 
+#if DEBUG_LOG
               Serial.println(method);
               Serial.println(url);
               Serial.println(params);
+#endif
 
               respond = true;
               break;
