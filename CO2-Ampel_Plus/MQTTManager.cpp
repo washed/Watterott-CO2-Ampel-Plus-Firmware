@@ -120,7 +120,7 @@ void mqtt_send_value() {
       Serial.println(tempMessage);
 #endif
       if (measurement_valid == true) {
-        DynamicJsonDocument doc(256);
+        StaticJsonDocument<256> doc;
         doc["co2"] = co2_sensor_measurement.co2;
         doc["temp"] = co2_sensor_measurement.temperature;
         doc["hum"] = co2_sensor_measurement.humidity;
@@ -182,7 +182,7 @@ void mqtt_message_received(char* topic, byte* payload, unsigned int length) {
   Serial.println(topicToProcess);
 #endif
   // Parse message into JSON
-  DynamicJsonDocument doc(1024);
+  StaticJsonDocument<1024> doc;
   auto error = deserializeJson(doc, payload);
   // Check if payloadToProcess is valid JSON
   if (error) {

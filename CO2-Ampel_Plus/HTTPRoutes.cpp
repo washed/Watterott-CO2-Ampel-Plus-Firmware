@@ -68,7 +68,7 @@ void get_api_sensor(WiFiClient& client) {
   client.println("Content-type:application/json");
   client.println();
 
-  DynamicJsonDocument doc(256);
+  StaticJsonDocument<256> doc;
 
   co2_sensor_measurement_t co2_sensor_measurement;
   bool measurement_valid = get_co2_sensor_measurement(co2_sensor_measurement);
@@ -87,7 +87,7 @@ void get_calibrate(WiFiClient& client, bool force = false) {
   client.println("Content-type:application/json");
   client.println();
 
-  DynamicJsonDocument doc(256);
+  StaticJsonDocument<256> doc;
 
   size_t cal_ok_count = get_cal_ok_count();
   doc["calOkCount"] = cal_ok_count;
@@ -104,7 +104,7 @@ void get_calibrate_ok_count(WiFiClient& client) {
   client.println("Content-type:application/json");
   client.println();
 
-  DynamicJsonDocument doc(256);
+  StaticJsonDocument<256> doc;
 
   doc["calOkCount"] = get_cal_ok_count();
 
