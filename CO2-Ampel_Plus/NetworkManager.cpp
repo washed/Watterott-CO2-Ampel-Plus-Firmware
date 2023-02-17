@@ -11,8 +11,8 @@ bool wifi_is_connected() {
   return WiFi.status() == WL_CONNECTED;
 }
 
-uint8_t get_wifi_status() {
-  return WiFi.status();
+wl_status_t get_wifi_status() {
+  return static_cast<wl_status_t>(WiFi.status());
 }
 
 /*
@@ -75,11 +75,13 @@ enum WIFI_CONNECT_STATES { INIT, CONNECTING, CONNECTED, FAILURE, TIMEOUT };
 WIFI_CONNECT_STATES wifi_connect_state = WIFI_CONNECT_STATES::INIT;
 
 void wifi_wpa_connect();
-
 Task task_wifi_connect(500 * TASK_MILLISECOND, -1, &wifi_wpa_connect);
 
+void wifi_wpa_monitor();
+Task task_wifi_wpa_monitor(500 * TASK_MILLISECOND, -1, &wifi_wpa_monitor);
+
 void wifi_wpa_connect() {
-  uint8_t wifi_status = WiFi.status();
+  wl_status_t wifi_status = get_wifi_status();
   static int started_connecting_run_count;
   int connect_try_count = 0;
   switch (wifi_connect_state) {
@@ -114,6 +116,7 @@ void wifi_wpa_connect() {
           task_wifi_connect.getRunCounter() - started_connecting_run_count;
       if (wifi_status == WL_CONNECTED) {
         wifi_connect_state = WIFI_CONNECT_STATES::CONNECTED;
+        print_wifi_status();
       } else if (connect_try_count >= 10) {
         wifi_connect_state = WIFI_CONNECT_STATES::TIMEOUT;
       }
@@ -127,7 +130,8 @@ void wifi_wpa_connect() {
       break;
 
     case WIFI_CONNECT_STATES::CONNECTED:
-      print_wifi_status();
+      Serial.println("Starting task_wifi_wpa_monitor");
+      task_wifi_wpa_monitor.enable();
       task_wifi_connect.disable();
       break;
 
@@ -140,6 +144,31 @@ void wifi_wpa_connect() {
 void init_wifi_connect(Scheduler& scheduler) {
   scheduler.addTask(task_wifi_connect);
   task_wifi_connect.enable();
+}
+
+void wifi_wpa_monitor() {
+  wl_status_t status = get_wifi_status();
+  switch (wifi_connect_state) {
+    case WIFI_CONNECT_STATES::CONNECTED:
+      switch (status) {
+        case wl_status_t::WL_CONNECTION_LOST:
+        case wl_status_t::WL_DISCONNECTED:
+          Serial.println("Wifi connection lost, attempting to reconnect...");
+          wifi_connect_state = WIFI_CONNECT_STATES::INIT;
+          task_wifi_connect.enable();
+          break;
+        default:
+          Serial.println(status);
+          break;
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+void init_wifi_wpa_monitor(Scheduler& scheduler) {
+  scheduler.addTask(task_wifi_wpa_monitor);
 }
 
 void print_wifi_status() {

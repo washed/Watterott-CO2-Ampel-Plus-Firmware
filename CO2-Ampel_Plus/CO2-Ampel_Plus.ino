@@ -99,6 +99,8 @@ void setup() {
       set_leds_circle_cw, 50, -1,
       std::vector<uint32_t>{LED_RED, LED_YELLOW, LED_GREEN, LED_BLUE}, 0});
 
+  init_wifi_wpa_monitor(scheduler);
+
   switch (wifi_state) {
       // // TODO: AP mode disabled for now
       // case WIFI_MODE_AP_INIT:  // Create  an Access  Point
