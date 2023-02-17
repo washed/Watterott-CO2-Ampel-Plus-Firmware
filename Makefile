@@ -56,6 +56,12 @@ configure:
 	@echo -ne "set wifi_password ${WIFI_PASSWORD};" > ${CO2AMPEL_DEV_TTY};
 	@echo "Configuring done!"
 
+configure-dark:
+	@echo -ne "set led_brightness 0;" > ${CO2AMPEL_DEV_TTY};
+
+configure-bright:
+	@echo -ne "set led_brightness 255;" > ${CO2AMPEL_DEV_TTY};
+
 ec:
 	@echo -ne 'set buzzer 1;' > ${CO2AMPEL_DEV_TTY};
 	@echo -ne 'set wifi_password ;' > ${CO2AMPEL_DEV_TTY};
