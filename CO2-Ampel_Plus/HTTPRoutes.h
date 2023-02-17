@@ -5,7 +5,7 @@
 
 void get_root(WiFiClient& client);
 void get_api_sensor(WiFiClient& client);
-void get_calibrate(WiFiClient& client);
+void get_calibrate(WiFiClient& client, bool force = false);
 void get_calibrate_ok_count(WiFiClient& client);
 
 #endif

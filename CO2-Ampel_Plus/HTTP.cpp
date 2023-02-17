@@ -92,11 +92,13 @@ void http_server() {
                 if (url == F("/api/sensor")) {
                   get_api_sensor(client);
                 } else if (url == F("/api/calibrate")) {
-                  // TODO: this should probably be a post endpoint
                   get_calibrate_ok_count(client);
                 } else if (url == F("/api/calibrate/execute")) {
                   // TODO: this should probably be a post endpoint at the /api/calibrate route
                   get_calibrate(client);
+                } else if (url == F("/api/calibrate/execute-force")) {
+                  // TODO: this should probably be a post endpoint at the /api/calibrate route
+                  get_calibrate(client, true);
                 } else if (url == F("/")) {
                   get_root(client);
                 }

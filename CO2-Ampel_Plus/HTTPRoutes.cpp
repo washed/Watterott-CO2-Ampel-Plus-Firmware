@@ -82,14 +82,19 @@ void get_api_sensor(WiFiClient& client) {
   serializeJson(doc, client);
 }
 
-void get_calibrate(WiFiClient& client) {
+void get_calibrate(WiFiClient& client, bool force = false) {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:application/json");
   client.println();
 
   DynamicJsonDocument doc(256);
 
-  doc["co2CalAcked"] = calibrate_co2();
+  size_t cal_ok_count = get_cal_ok_count();
+  doc["calOkCount"] = cal_ok_count;
+
+  if (cal_ok_count > 50 || force) {
+    doc["co2CalAcked"] = calibrate_co2();
+  }
 
   serializeJson(doc, client);
 }
