@@ -1,6 +1,8 @@
 #include "DeviceConfig.h"
+#include <107-Arduino-UniqueId.h>
 #include "Config.h"
 #include "LED.h"
+
 FlashStorage(config_store, device_config_t);
 
 bool config_is_initialized() {
@@ -22,7 +24,7 @@ void config_set_factory_defaults() {
       MQTT_BROKER_PORT,
       MQTT_BROKER_ADDR,
       MQTT_TOPIC,
-      MQTT_DEVICE_NAME,
+      "",
       TEMPERATURE_OFFSET,
       MQTT_USERNAME,
       MQTT_PASSWORD,
@@ -31,6 +33,10 @@ void config_set_factory_defaults() {
       BUZZER_ENABLED,
       BRIGHTNESS,
   };
+
+  for (size_t i = 0; i < OpenCyphalUniqueId().size(); i++) {
+    sprintf(&_default_config.ampel_name[2 * i], "%02X", OpenCyphalUniqueId[i]);
+  }
   config_store.write(_default_config);
 }
 
